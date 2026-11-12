@@ -368,7 +368,7 @@ const ENTRIES = [
   {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:null},
   {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:null},
   {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:null},
-  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:false},
+  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:null, est:true},
   {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:null},
   {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:null},
 ];
@@ -394,7 +394,7 @@ const MAX_COST = priciest.cost;
 
 document.getElementById("count-bar").textContent = `${DONE.length} of ${ENTRIES.length} finished`;
 document.getElementById("stats").innerHTML = [
-  ["Finished", `${DONE.length} of ${ENTRIES.length}`, `${ENTRIES.length - DONE.length} still building`],
+  ["Finished", `${DONE.length} of ${ENTRIES.length}`, (ENTRIES.length - DONE.length) ? `${ENTRIES.length - DONE.length} still building` : "all runs in, judging next"],
   ["Spent so far", (DONE.some(e => e.est) ? "~" : "") + usd(spent), `across ${DONE.length} finished runs`],
   ["Fastest", fmt(fastest.mins), `${esc(name(fastest))}, slowest was ${fmt(byTime.at(-1).mins)}`],
   ["Cheapest", usd(cheapest.cost), `${esc(name(cheapest))}, priciest was ${cost(priciest)}`],

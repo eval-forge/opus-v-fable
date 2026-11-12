@@ -6,4 +6,4 @@ Results page and playable builds for the Eval Forge "Lost Temple" eval: one prom
 - Each `<model>-<effort>/` folder holds that entry's production build (open its `index.html`), and `<model>-<effort>/source/` holds the source exactly as merged in eval-forge/eval-forge.github.io under `evals/lost-temple/`.
 - `previews/` holds main-menu screenshots used on the cards.
 
-Fable 5.2 xhigh was added from PR #12. Opus 5.5 max is still building and shows as pending.
+All six entries are in: PRs #7-#10, #12 and #14. Opus 5.5 max shows its own cost estimate (marked ~) until the tracker number lands.
