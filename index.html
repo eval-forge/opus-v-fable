@@ -208,10 +208,10 @@ tr.pending td{color:var(--muted);font-style:italic}
 
   <section>
     <h2>The scoreboard</h2>
-    <p class="sub">Ranked by judged score. Time is wall-clock from first message to finished pull request. Cost is what the run actually billed. Unit tests are the passing count, re-run on a fresh install.</p>
+    <p class="sub">Ranked by Sachin, after playing every build hands-on. The judge's S × P score sits alongside it as a second opinion. Time is wall-clock from first message to finished pull request. Cost is what the run actually billed. Unit tests are the passing count, re-run on a fresh install.</p>
     <div class="method">
       <div class="eq-card">
-        <p class="callout"><b>Score = S × P.</b> One judge, one rubric, all six entries rebuilt from a clean install and played headless with the same scripts. <a href="https://github.com/eval-forge/opus-v-fable/blob/main/JUDGING.md" target="_blank" rel="noopener noreferrer">Full reasoning in JUDGING.md</a>.</p>
+        <p class="callout"><b>Rank is Sachin's call</b>, from hands-on play. <b>Judge score = S × P</b> is the second opinion: one judge, one rubric, all six entries rebuilt from a clean install and played headless with the same scripts. <a href="https://github.com/eval-forge/opus-v-fable/blob/main/JUDGING.md" target="_blank" rel="noopener noreferrer">Full reasoning in JUDGING.md</a>.</p>
         <dl>
           <dt>S</dt><dd>Quality, 0 to 100: does it run, how much of the game actually works when driven, how good it looks and how deep the systems go.</dd>
           <dt>P</dt><dd>Prompt fidelity, 0 to 1: share of the prompt's requirements met, checked against the running build. A claim in SELF_REVIEW.md that the judge caught being false costs double.</dd>
@@ -224,7 +224,7 @@ tr.pending td{color:var(--muted);font-style:italic}
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Model</th><th>Effort</th><th>Score</th><th>Time</th><th>Cost</th><th>Tokens</th><th>$/hr</th><th>Tests</th><th>PR</th></tr></thead>
+          <thead><tr><th>#</th><th>Model</th><th>Effort</th><th>Judge score</th><th>Time</th><th>Cost</th><th>Tokens</th><th>$/hr</th><th>Tests</th><th>PR</th></tr></thead>
           <tbody id="rank-body"></tbody>
         </table>
         <div class="dl" role="group" aria-label="Download the data">
@@ -240,7 +240,8 @@ tr.pending td{color:var(--muted);font-style:italic}
     <h2>The entries</h2>
     <p class="sub">Click a preview to boot the live game right in the card, or open it full screen. Every texture, mesh and sound is generated in code.</p>
     <div class="controls" role="group" aria-label="Sort entries">
-      <button class="chip" data-sort="score" aria-pressed="true">Best score</button>
+      <button class="chip" data-sort="rank" aria-pressed="true">Sachin's ranking</button>
+      <button class="chip" data-sort="score" aria-pressed="false">Judge score</button>
       <button class="chip" data-sort="cost" aria-pressed="false">Cheapest first</button>
       <button class="chip" data-sort="time" aria-pressed="false">Fastest first</button>
       <button class="chip" data-sort="tests" aria-pressed="false">Most tests</button>
@@ -262,7 +263,7 @@ tr.pending td{color:var(--muted);font-style:italic}
 
   <section>
     <h2>Score against cost</h2>
-    <p class="sub">Same axes idea, but the question that matters: what did each extra dollar buy in judged quality? Up and to the left is the bargain. Flat lines mean the extra effort bought nothing.</p>
+    <p class="sub">Same axes idea, but the question that matters: what did each extra dollar buy in the judge's quality score? Up and to the left is the bargain. Flat lines mean the extra effort bought nothing.</p>
     <div class="ac-card">
       <div class="ac-head"><b>The Lost Temple</b><span>Score vs. cost</span></div>
       <div class="ac-legend" id="sc-legend"></div>
@@ -390,14 +391,15 @@ Work autonomously until a full run is playable and fun, from arriving at dawn to
 // mins = wall-clock build time, cost = billed USD from the usage tracker, tests = passing unit tests.
 // Entries with done:false are still building and show as pending.
 // score = S x P from JUDGING.md (quality 0-100 times prompt fidelity 0-1).
+// rank = Sachin's own hands-on ranking (the headline order); why = Sachin's one-line reason. score stays as the judge's number.
 // tok = [input, output, cache write, cache read] tokens as each entry reported in its own SELF_REVIEW.md.
 const ENTRIES = [
-  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:64.2, tok:[285, 305255, 523793, 31450598]},
-  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:67.7, tok:[250, 369648, 646574, 31114354]},
-  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:84.0, tok:[565, 622579, 1235348, 70732065]},
-  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:89.9, tok:[1483, 1349402, 2827414, 187418463]},
-  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:73.3, tok:[466, 614039, 1206014, 58849638]},
-  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:86.8, tok:[1000, 1144385, 2437248, 126126239]},
+  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:64.2, tok:[285, 305255, 523793, 31450598], rank:6, why:"Looked slightly better than high, but less true to the prompt."},
+  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:67.7, tok:[250, 369648, 646574, 31114354], rank:5, why:"Much truer to the prompt than medium. Very close call with medium."},
+  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:84.0, tok:[565, 622579, 1235348, 70732065], rank:3, why:""},
+  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:89.9, tok:[1483, 1349402, 2827414, 187418463], rank:4, why:"Locked in on the look, but strayed from the prompt in a lot of places."},
+  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:73.3, tok:[466, 614039, 1206014, 58849638], rank:2, why:"A masterpiece in every form factor."},
+  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:86.8, tok:[1000, 1144385, 2437248, 126126239], rank:1, why:"A masterpiece in every form factor."},
 ];
 const EFFORT_ORDER = {medium:0, high:1, xhigh:2, max:3};
 const EFFORT_LABEL = {medium:"medium", high:"high", xhigh:"extra high", max:"max"};
@@ -422,7 +424,8 @@ const byTime = [...DONE].sort((a,b) => a.mins - b.mins);
 const cheapest = byCost[0], priciest = byCost.at(-1), fastest = byTime[0];
 const SCORED = DONE.filter(e => e.score != null);
 const byScore = [...SCORED].sort((a,b) => b.score - a.score);
-const best = byScore[0];
+const byRank = [...DONE].sort((a,b) => a.rank - b.rank);
+const best = byScore[0], pick = byRank[0];
 const valueOf = e => e.score / e.cost;
 const bargain = [...SCORED].sort((a,b) => valueOf(b) - valueOf(a))[0];
 const spent = DONE.reduce((s,e) => s + e.cost, 0);
@@ -431,17 +434,17 @@ const MAX_COST = priciest.cost;
 document.getElementById("count-bar").textContent = `${DONE.length} of ${ENTRIES.length} finished`;
 document.getElementById("stats").innerHTML = [
   ...(best ? [] : [["Finished", `${DONE.length} of ${ENTRIES.length}`, (ENTRIES.length - DONE.length) ? `${ENTRIES.length - DONE.length} still building` : "all runs in, judging next"]]),
-  best ? ["Top score", sc(best), `${esc(name(best))}, lowest was ${sc(byScore.at(-1))}`] : ["Fastest", fmt(fastest.mins), `${esc(name(fastest))}, slowest was ${fmt(byTime.at(-1).mins)}`],
-  ...(bargain ? [["Most points per $", `${(valueOf(bargain)).toFixed(1)}`, `${esc(name(bargain))}: ${sc(bargain)} for ${cost(bargain)}`]] : []),
+  ["Sachin's #1", esc(name(pick)), `${esc(pick.why)} Judge's top score: ${esc(name(best))}, ${sc(best)}.`],
+  ...(bargain ? [["Most judge points per $", `${(valueOf(bargain)).toFixed(1)}`, `${esc(name(bargain))}: ${sc(bargain)} for ${cost(bargain)}`]] : []),
   ["Total spent", (DONE.some(e => e.est) ? "~" : "") + usd(spent), `across ${DONE.length} finished runs`],
   ["Cheapest", usd(cheapest.cost), `${esc(name(cheapest))}, priciest was ${cost(priciest)}`],
 ].map(([k,v,s]) => `<div class="stat"><small>${k}</small><strong>${v}</strong><span>${s}</span></div>`).join("");
 
-const tableOrder = [...(SCORED.length ? [...byScore, ...DONE.filter(e => e.score == null)] : byCost), ...ENTRIES.filter(e => !e.done)];
-const topRow = best || cheapest;
+const tableOrder = [...byRank, ...ENTRIES.filter(e => !e.done)];
+const topRow = pick;
 document.getElementById("rank-body").innerHTML = tableOrder.map((e,i) => e.done ? `
   <tr class="${e === topRow ? "top" : ""}">
-    <td>${i + 1}</td>
+    <td>${e.rank}</td>
     <td><a href="${PLAY(e)}">${esc(e.model)}</a></td>
     <td>${esc(EFFORT_LABEL[e.effort])}</td>
     <td class="score">${sc(e)}</td>
@@ -476,14 +479,15 @@ function card(e){
     <article class="card${e === topRow ? " top" : ""}">
       <div class="preview" data-file="${e.dir}/">
         <span class="rank">${isFable(e) ? "Fable" : "Opus"} · ${esc(EFFORT_LABEL[e.effort])}</span>
-        <span class="score-badge">${e.score == null ? cost(e) : `Score ${sc(e)}`}</span>
+        <span class="score-badge">#${e.rank}</span>
         <img src="previews/${e.dir}.jpg" alt="Main menu of the ${esc(name(e))} entry" loading="lazy">
         <button type="button" aria-label="Load live game for ${esc(name(e))}"><span>Load live game</span></button>
       </div>
       <div class="body">
         <div class="model"><h3>${esc(e.model)}</h3><span class="effort">${esc(EFFORT_LABEL[e.effort])}</span></div>
+        ${e.why ? `<p class="scene-title">Sachin: "${esc(e.why)}"</p>` : ""}
         <dl class="meta">
-          <div><dt>Score</dt><dd>${sc(e)}</dd></div>
+          <div><dt>Judge</dt><dd>${sc(e)}</dd></div>
           <div><dt>Time</dt><dd>${fmt(e.mins)}</dd></div>
           <div><dt>Cost</dt><dd>${cost(e)}</dd></div>
           <div><dt>Tokens</dt><dd title="${tokFull(e.tokens)} tokens">${tokM(e.tokens)}</dd></div>
@@ -512,6 +516,7 @@ document.getElementById("grid").addEventListener("click", ev => {
 
 const pendingLast = f => (a,b) => (b.done - a.done) || (a.done ? f(a,b) : 0);
 const SORTS = {
+  rank:  pendingLast((a,b) => a.rank - b.rank),
   score: pendingLast((a,b) => (b.score ?? -1) - (a.score ?? -1)),
   cost:  pendingLast((a,b) => a.cost - b.cost),
   time:  pendingLast((a,b) => a.mins - b.mins),
@@ -522,13 +527,13 @@ document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click"
   document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === chip));
   renderGrid([...ENTRIES].sort(SORTS[chip.dataset.sort]));
 }));
-renderGrid([...ENTRIES].sort(SORTS.score));
+renderGrid([...ENTRIES].sort(SORTS.rank));
 
 // Download the data: CSV straight from ENTRIES, PDF drawn by a tiny built-in writer (no libraries).
 (function(){
   const ORIGIN = "https://eval-forge.github.io/opus-v-fable/";
   const rows = tableOrder.filter(e => e.done).map((e, i) => ({
-    rank: i + 1, model: e.model, effort: EFFORT_LABEL[e.effort], score: e.score == null ? "" : e.score.toFixed(1),
+    rank: e.rank, why: e.why, model: e.model, effort: EFFORT_LABEL[e.effort], score: e.score == null ? "" : e.score.toFixed(1),
     time: fmt(e.mins), mins: e.mins, cost: e.cost.toFixed(2), rate: e.rate.toFixed(2),
     tin: e.tok[0], tout: e.tok[1], tcw: e.tok[2], tcr: e.tok[3], tokens: e.tokens,
     tests: e.tests, pr: e.pr, play: ORIGIN + PLAY(e), src: SRC + e.dir + "/source",
@@ -541,22 +546,22 @@ renderGrid([...ENTRIES].sort(SORTS.score));
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   document.getElementById("dl-csv").addEventListener("click", () => {
-    const head = ["rank","model","effort","score","build_time","build_minutes","cost_usd","usd_per_hour","input_tokens","output_tokens","cache_write_tokens","cache_read_tokens","total_tokens","unit_tests","pr","play_url","source_url"];
-    const keys = ["rank","model","effort","score","time","mins","cost","rate","tin","tout","tcw","tcr","tokens","tests","pr","play","src"];
+    const head = ["sachin_rank","model","effort","judge_score","build_time","build_minutes","cost_usd","usd_per_hour","input_tokens","output_tokens","cache_write_tokens","cache_read_tokens","total_tokens","unit_tests","pr","play_url","source_url","sachin_comment"];
+    const keys = ["rank","model","effort","score","time","mins","cost","rate","tin","tout","tcw","tcr","tokens","tests","pr","play","src","why"];
     const q = v => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
     const csv = [head.join(","), ...rows.map(r => keys.map(k => q(r[k])).join(","))].join("\r\n") + "\r\n";
     save(new Blob([csv], {type: "text/csv;charset=utf-8"}), stamp + ".csv");
   });
   document.getElementById("dl-pdf").addEventListener("click", () => {
     const W = 842, H = 595, M = 40;                      // A4 landscape, points
-    const cols = [["#",22],["Model",68],["Effort",62],["Score",44],["Time",50],["Cost",56],["$/hr",48],["Input",46],["Output",62],["Cache write",72],["Cache read",78],["Total tokens",82],["Tests",40],["PR",32]];
+    const cols = [["#",22],["Model",68],["Effort",62],["Judge",44],["Time",50],["Cost",56],["$/hr",48],["Input",46],["Output",62],["Cache write",72],["Cache read",78],["Total tokens",82],["Tests",40],["PR",32]];
     const cells = r => [r.rank, r.model, r.effort, r.score, r.time, "$" + r.cost, "$" + r.rate, tokFull(r.tin), tokFull(r.tout), tokFull(r.tcw), tokFull(r.tcr), tokFull(r.tokens), r.tests, "#" + r.pr];
     const pe = t => String(t).replace(/[\\()]/g, c => "\\" + c).replace(/[^\x20-\x7e]/g, "");
     const out = [];
     const text = (x, y, size, str, bold) => out.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${x} ${y} Td (${pe(str)}) Tj ET`);
     const fill = (x, y, w, h, g) => out.push(`${g} g ${x} ${y} ${w} ${h} re f 0 g`);
     text(M, H - M - 10, 20, "The Lost Temple: Opus vs Fable", true);
-    text(M, H - M - 30, 10, "Eval Forge. One prompt, six runs. Score = S x P (quality 0-100 times prompt fidelity 0-1). Ranked by score.");
+    text(M, H - M - 30, 10, "Eval Forge. One prompt, six runs. Ranked by Sachin's hands-on play. Judge score = S x P (quality 0-100 times prompt fidelity 0-1).");
     let y = H - M - 62;
     const rowH = 22;
     fill(M, y - 7, W - 2 * M, rowH, 0.12);
@@ -704,13 +709,13 @@ function drawCostChart({svg, legend, sub, Y, list, note}){
 }
 drawCostChart({
   svg:"plot-ac", legend:"ac-legend", sub:"ac-sub", list: DONE,
-  Y: {key:"mins", label:"Build time (wall clock)", tick:v => fmt(v), hover:e => fmt(e.mins),
+  Y: {key:"mins", label:"Build time (wall clock)", tick:v => fmt(v), hover:e => `${fmt(e.mins)} · Sachin #${e.rank}`,
       range: vals => { const step = Math.max(...vals) > 200 ? 60 : 30; return {lo:0, step, hi:Math.max(180, Math.ceil(Math.max(...vals) / step) * step + step)}; }},
   note: "Time says how long each run ground away, not how good the result is. The score chart below does that.",
 });
 drawCostChart({
   svg:"plot-sc", legend:"sc-legend", sub:"sc-sub", list: SCORED,
-  Y: {key:"score", label:"Judged score (S × P)", tick:v => v, hover:e => `score ${sc(e)}`,
+  Y: {key:"score", label:"Judge score (S × P)", tick:v => v, hover:e => `judge ${sc(e)} · Sachin #${e.rank}`,
       range: vals => { const lo = Math.max(0, Math.floor((Math.min(...vals) - 10) / 10) * 10); return {lo, step:10, hi:Math.min(100, Math.ceil((Math.max(...vals) + 5) / 10) * 10)}; }},
   note: "Score is S × P from JUDGING.md: quality times prompt fidelity, with false self-review claims costing double.",
 });
