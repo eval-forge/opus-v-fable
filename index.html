@@ -203,12 +203,14 @@ tr.pending td{color:var(--muted);font-style:italic}
   </header>
 
   <section>
-    <h2>The scoreboard so far</h2>
-    <p class="sub">Time is wall-clock from first message to finished pull request. Cost is what the run actually billed. Unit tests are the passing count each entry reported.</p>
+    <h2>The scoreboard</h2>
+    <p class="sub">Ranked by judged score. Time is wall-clock from first message to finished pull request. Cost is what the run actually billed. Unit tests are the passing count, re-run on a fresh install.</p>
     <div class="method">
       <div class="eq-card">
-        <p class="callout"><b>Quality scores are not in yet.</b> Score and truthness to prompt get judged once all six entries are done, so nobody gets graded on a curve with two players still on the field. Until then, the hard numbers below are the only ones that count.</p>
+        <p class="callout"><b>Score = S × P.</b> One judge, one rubric, all six entries rebuilt from a clean install and played headless with the same scripts. <a href="https://github.com/eval-forge/opus-v-fable/blob/main/JUDGING.md" target="_blank" rel="noopener noreferrer">Full reasoning in JUDGING.md</a>.</p>
         <dl>
+          <dt>S</dt><dd>Quality, 0 to 100: does it run, how much of the game actually works when driven, how good it looks and how deep the systems go.</dd>
+          <dt>P</dt><dd>Prompt fidelity, 0 to 1: share of the prompt's requirements met, checked against the running build. A claim in SELF_REVIEW.md that the judge caught being false costs double.</dd>
           <dt>Time</dt><dd>Wall-clock build time, from the prompt landing to the finished pull request.</dd>
           <dt>Cost</dt><dd>Real spend for the run, in US dollars, from the usage tracker. A ~ marks the run's own estimate until the tracker number lands.</dd>
           <dt>$/hr</dt><dd>Cost divided by time. How hard each model burns money while it works.</dd>
@@ -217,7 +219,7 @@ tr.pending td{color:var(--muted);font-style:italic}
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Model</th><th>Time</th><th>Cost</th><th>$/hr</th><th>Tests</th><th>PR</th></tr></thead>
+          <thead><tr><th>#</th><th>Model</th><th>Score</th><th>Time</th><th>Cost</th><th>$/hr</th><th>Tests</th><th>PR</th></tr></thead>
           <tbody id="rank-body"></tbody>
         </table>
       </div>
@@ -228,7 +230,8 @@ tr.pending td{color:var(--muted);font-style:italic}
     <h2>The entries</h2>
     <p class="sub">Click a preview to boot the live game right in the card, or open it full screen. Every texture, mesh and sound is generated in code.</p>
     <div class="controls" role="group" aria-label="Sort entries">
-      <button class="chip" data-sort="cost" aria-pressed="true">Cheapest first</button>
+      <button class="chip" data-sort="score" aria-pressed="true">Best score</button>
+      <button class="chip" data-sort="cost" aria-pressed="false">Cheapest first</button>
       <button class="chip" data-sort="time" aria-pressed="false">Fastest first</button>
       <button class="chip" data-sort="tests" aria-pressed="false">Most tests</button>
       <button class="chip" data-sort="name" aria-pressed="false">Model name</button>
@@ -244,6 +247,17 @@ tr.pending td{color:var(--muted);font-style:italic}
       <div class="ac-legend" id="ac-legend"></div>
       <div class="ac-scroll"><svg id="plot-ac" viewBox="0 0 860 440" role="img" aria-label="Build time against cost per run, log scale, one line per model"></svg></div>
       <p class="ac-sub" id="ac-sub"></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Score against cost</h2>
+    <p class="sub">Same axes idea, but the question that matters: what did each extra dollar buy in judged quality? Up and to the left is the bargain. Flat lines mean the extra effort bought nothing.</p>
+    <div class="ac-card">
+      <div class="ac-head"><b>The Lost Temple</b><span>Score vs. cost</span></div>
+      <div class="ac-legend" id="sc-legend"></div>
+      <div class="ac-scroll"><svg id="plot-sc" viewBox="0 0 860 440" role="img" aria-label="Judged score against cost per run, log scale, one line per model"></svg></div>
+      <p class="ac-sub" id="sc-sub"></p>
     </div>
   </section>
 
@@ -363,14 +377,14 @@ Work autonomously until a full run is playable and fun, from arriving at dawn to
 <script>
 // mins = wall-clock build time, cost = billed USD from the usage tracker, tests = passing unit tests.
 // Entries with done:false are still building and show as pending.
-// score = judged quality, 0 to 100. Stays null until the judging pass.
+// score = S x P from JUDGING.md (quality 0-100 times prompt fidelity 0-1).
 const ENTRIES = [
-  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:null},
-  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:null},
-  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:null},
-  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:null, est:true},
-  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:null},
-  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:null},
+  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:64.2},
+  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:67.7},
+  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:84.0},
+  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:89.9, est:true},
+  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:73.3},
+  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:86.8},
 ];
 const EFFORT_ORDER = {medium:0, high:1, xhigh:2, max:3};
 const EFFORT_LABEL = {medium:"medium", high:"high", xhigh:"extra high", max:"max"};
@@ -381,7 +395,8 @@ const SRC = "https://github.com/eval-forge/opus-v-fable/tree/main/";
 const PRS = "https://github.com/eval-forge/eval-forge.github.io/pull/";
 const fmt = m => m >= 60 ? `${Math.floor(m/60)}h ${String(m%60).padStart(2,"0")}m` : `${m}m`;
 const usd = n => `$${n.toFixed(2)}`;
-const cost = e => (e.est ? "~" : "") + usd(e.cost);   // est: self-reported estimate until the tracker number lands
+const cost = e => (e.est ? "~" : "") + usd(e.cost);
+const sc = e => e.score == null ? "…" : e.score.toFixed(1);   // est: self-reported estimate until the tracker number lands
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const name = e => `${e.model} ${EFFORT_LABEL[e.effort]}`;
 const isFable = e => e.model.startsWith("Fable");
@@ -389,30 +404,38 @@ const isFable = e => e.model.startsWith("Fable");
 const byCost = [...DONE].sort((a,b) => a.cost - b.cost);
 const byTime = [...DONE].sort((a,b) => a.mins - b.mins);
 const cheapest = byCost[0], priciest = byCost.at(-1), fastest = byTime[0];
+const SCORED = DONE.filter(e => e.score != null);
+const byScore = [...SCORED].sort((a,b) => b.score - a.score);
+const best = byScore[0];
+const valueOf = e => e.score / e.cost;
+const bargain = [...SCORED].sort((a,b) => valueOf(b) - valueOf(a))[0];
 const spent = DONE.reduce((s,e) => s + e.cost, 0);
 const MAX_COST = priciest.cost;
 
 document.getElementById("count-bar").textContent = `${DONE.length} of ${ENTRIES.length} finished`;
 document.getElementById("stats").innerHTML = [
-  ["Finished", `${DONE.length} of ${ENTRIES.length}`, (ENTRIES.length - DONE.length) ? `${ENTRIES.length - DONE.length} still building` : "all runs in, judging next"],
-  ["Spent so far", (DONE.some(e => e.est) ? "~" : "") + usd(spent), `across ${DONE.length} finished runs`],
-  ["Fastest", fmt(fastest.mins), `${esc(name(fastest))}, slowest was ${fmt(byTime.at(-1).mins)}`],
+  ...(best ? [] : [["Finished", `${DONE.length} of ${ENTRIES.length}`, (ENTRIES.length - DONE.length) ? `${ENTRIES.length - DONE.length} still building` : "all runs in, judging next"]]),
+  best ? ["Top score", sc(best), `${esc(name(best))}, lowest was ${sc(byScore.at(-1))}`] : ["Fastest", fmt(fastest.mins), `${esc(name(fastest))}, slowest was ${fmt(byTime.at(-1).mins)}`],
+  ...(bargain ? [["Most points per $", `${(valueOf(bargain)).toFixed(1)}`, `${esc(name(bargain))}: ${sc(bargain)} for ${cost(bargain)}`]] : []),
+  ["Total spent", (DONE.some(e => e.est) ? "~" : "") + usd(spent), `across ${DONE.length} finished runs`],
   ["Cheapest", usd(cheapest.cost), `${esc(name(cheapest))}, priciest was ${cost(priciest)}`],
 ].map(([k,v,s]) => `<div class="stat"><small>${k}</small><strong>${v}</strong><span>${s}</span></div>`).join("");
 
-const tableOrder = [...byCost, ...ENTRIES.filter(e => !e.done)];
+const tableOrder = [...(SCORED.length ? [...byScore, ...DONE.filter(e => e.score == null)] : byCost), ...ENTRIES.filter(e => !e.done)];
+const topRow = best || cheapest;
 document.getElementById("rank-body").innerHTML = tableOrder.map((e,i) => e.done ? `
-  <tr class="${e === cheapest ? "top" : ""}">
+  <tr class="${e === topRow ? "top" : ""}">
     <td>${i + 1}</td>
     <td>${esc(name(e))}</td>
+    <td class="score">${sc(e)}</td>
     <td class="num">${fmt(e.mins)}</td>
-    <td class="score">${cost(e)}</td>
+    <td class="num">${cost(e)}</td>
     <td class="num">${usd(e.rate)}</td>
     <td class="num">${e.tests}</td>
     <td class="num"><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></td>
   </tr>` : `
   <tr class="pending">
-    <td>…</td><td>${esc(name(e))}</td><td colspan="5">still building</td>
+    <td>…</td><td>${esc(name(e))}</td><td colspan="6">still building</td>
   </tr>`).join("");
 
 function card(e){
@@ -433,19 +456,19 @@ function card(e){
       </div>
     </article>`;
   return `
-    <article class="card${e === cheapest ? " top" : ""}">
+    <article class="card${e === topRow ? " top" : ""}">
       <div class="preview" data-file="${e.dir}/">
         <span class="rank">${isFable(e) ? "Fable" : "Opus"} · ${esc(EFFORT_LABEL[e.effort])}</span>
-        <span class="score-badge">${cost(e)}</span>
+        <span class="score-badge">${e.score == null ? cost(e) : `Score ${sc(e)}`}</span>
         <img src="previews/${e.dir}.jpg" alt="Main menu of the ${esc(name(e))} entry" loading="lazy">
         <button type="button" aria-label="Load live game for ${esc(name(e))}"><span>Load live game</span></button>
       </div>
       <div class="body">
         <div class="model"><h3>${esc(e.model)}</h3><span class="effort">${esc(EFFORT_LABEL[e.effort])}</span></div>
         <dl class="meta">
+          <div><dt>Score</dt><dd>${sc(e)}</dd></div>
           <div><dt>Time</dt><dd>${fmt(e.mins)}</dd></div>
           <div><dt>Cost</dt><dd>${cost(e)}</dd></div>
-          <div><dt>Tests</dt><dd>${e.tests}</dd></div>
           <div><dt>PR</dt><dd><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></dd></div>
         </dl>
         <div class="timebar" title="${usd(e.cost)} of ${usd(MAX_COST)}, the priciest finished run"><i style="width:${(e.cost / MAX_COST * 100).toFixed(1)}%"></i></div>
@@ -472,6 +495,7 @@ document.getElementById("grid").addEventListener("click", ev => {
 
 const pendingLast = f => (a,b) => (b.done - a.done) || (a.done ? f(a,b) : 0);
 const SORTS = {
+  score: pendingLast((a,b) => (b.score ?? -1) - (a.score ?? -1)),
   cost:  pendingLast((a,b) => a.cost - b.cost),
   time:  pendingLast((a,b) => a.mins - b.mins),
   tests: pendingLast((a,b) => b.tests - a.tests),
@@ -481,7 +505,7 @@ document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click"
   document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === chip));
   renderGrid([...ENTRIES].sort(SORTS[chip.dataset.sort]));
 }));
-renderGrid([...ENTRIES].sort(SORTS.cost));
+renderGrid([...ENTRIES].sort(SORTS.score));
 
 // Scatter plots: one dot per finished entry, cost on y.
 const CMAX = Math.max(...DONE.map(e => e.cost));
@@ -528,10 +552,8 @@ PLOTS.forEach(cfg => {
   document.getElementById(cfg.id).innerHTML = g;
 });
 
-// Time against cost, styled after a classic accuracy-vs-cost chart.
-// Swap Y to the score metric once judging lands (score is null until then).
-(function(){
-  const Y = {key:"mins", label:"Build time (wall clock)", tick:v => fmt(v)};
+// Time against cost and score against cost, styled after a classic accuracy-vs-cost chart.
+function drawCostChart({svg, legend, sub, Y, list, note}){
   const FAMILIES = [
     {model:"Fable 5.2", color:"#6b9a8b"},
     {model:"Opus 5.5",  color:"#d9673b"},
@@ -539,10 +561,9 @@ PLOTS.forEach(cfg => {
   const SHORT = {medium:"Med", high:"High", xhigh:"Xhigh", max:"Max"};
   const W = 860, H = 440, m = {l:84, r:30, t:30, b:76};
   const pw = W - m.l - m.r, ph = H - m.t - m.b;
-  const vals = DONE.map(e => e[Y.key]);
-  const Y_STEP = Math.max(...vals) > 200 ? 60 : 30;
-  const Y_LO = 0, Y_HI = Math.max(180, Math.ceil(Math.max(...vals) / Y_STEP) * Y_STEP + Y_STEP);
-  const X_LO = 10, X_HI = Math.max(...DONE.map(e => e.cost)) > 90 ? 200 : 100;
+  const vals = list.map(e => e[Y.key]);
+  const {lo: Y_LO, hi: Y_HI, step: Y_STEP} = Y.range(vals);
+  const X_LO = 10, X_HI = Math.max(...list.map(e => e.cost)) > 90 ? 200 : 100;
   const lx = v => Math.log10(v);
   const sx = v => m.l + (lx(v) - lx(X_LO)) / (lx(X_HI) - lx(X_LO)) * pw;
   const sy = v => m.t + (1 - (v - Y_LO) / (Y_HI - Y_LO)) * ph;
@@ -559,11 +580,11 @@ PLOTS.forEach(cfg => {
   g += `<text class="ac-title" transform="translate(22 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">${Y.label}</text>`;
   const labels = [];
   FAMILIES.forEach(f => {
-    const pts = DONE.filter(e => e.model === f.model).sort((a,b) => a.cost - b.cost);
+    const pts = list.filter(e => e.model === f.model).sort((a,b) => a.cost - b.cost);
     if (pts.length > 1) g += `<polyline class="ac-line" stroke="${f.color}" points="${pts.map(e => `${sx(e.cost)},${sy(e[Y.key])}`).join(" ")}"/>`;
     pts.forEach(e => {
       const x = sx(e.cost), y = sy(e[Y.key]);
-      g += `<circle class="ac-dot" cx="${x}" cy="${y}" r="10" fill="${f.color}"><title>${esc(`${e.model} ${EFFORT_LABEL[e.effort]}: ${cost(e)}, ${fmt(e.mins)}`)}</title></circle>`;
+      g += `<circle class="ac-dot" cx="${x}" cy="${y}" r="10" fill="${f.color}"><title>${esc(`${e.model} ${EFFORT_LABEL[e.effort]}: ${cost(e)}, ${Y.hover(e)}`)}</title></circle>`;
       labels.push({x, y: y - 18, text: SHORT[e.effort]});
     });
   });
@@ -574,15 +595,25 @@ PLOTS.forEach(cfg => {
     }
     g += `<text class="ac-label" x="${l.x}" y="${l.y}" text-anchor="middle">${esc(l.text)}</text>`;
   });
-  document.getElementById("plot-ac").innerHTML = g;
-  const pending = ENTRIES.filter(e => !e.done);
-  document.getElementById("ac-legend").innerHTML =
+  document.getElementById(svg).innerHTML = g;
+  const missing = ENTRIES.filter(e => !list.includes(e));
+  document.getElementById(legend).innerHTML =
     FAMILIES.map(f => `<span><i style="background:${f.color}"></i>${esc(f.model)}</span>`).join("") +
-    (pending.length ? `<span class="hollow"><i></i>Pending: ${pending.map(e => esc(`${e.model.split(" ")[0]} ${SHORT[e.effort]}`)).join(", ")}</span>` : "");
-  document.getElementById("ac-sub").textContent =
-    `${DONE.length} of ${ENTRIES.length} runs plotted.` + (pending.length ? ` ${pending.length} still building and ${pending.length === 1 ? "joins its line when it finishes" : "join the lines when they finish"}.` : "") +
-    " Quality scores come after judging.";
-})();
+    (missing.length ? `<span class="hollow"><i></i>Not plotted: ${missing.map(e => esc(`${e.model.split(" ")[0]} ${SHORT[e.effort]}`)).join(", ")}</span>` : "");
+  document.getElementById(sub).textContent = `${list.length} of ${ENTRIES.length} runs plotted. ` + note;
+}
+drawCostChart({
+  svg:"plot-ac", legend:"ac-legend", sub:"ac-sub", list: DONE,
+  Y: {key:"mins", label:"Build time (wall clock)", tick:v => fmt(v), hover:e => fmt(e.mins),
+      range: vals => { const step = Math.max(...vals) > 200 ? 60 : 30; return {lo:0, step, hi:Math.max(180, Math.ceil(Math.max(...vals) / step) * step + step)}; }},
+  note: "Time says how long each run ground away, not how good the result is. The score chart below does that.",
+});
+drawCostChart({
+  svg:"plot-sc", legend:"sc-legend", sub:"sc-sub", list: SCORED,
+  Y: {key:"score", label:"Judged score (S × P)", tick:v => v, hover:e => `score ${sc(e)}`,
+      range: vals => { const lo = Math.max(0, Math.floor((Math.min(...vals) - 10) / 10) * 10); return {lo, step:10, hi:Math.min(100, Math.ceil((Math.max(...vals) + 5) / 10) * 10)}; }},
+  note: "Score is S × P from JUDGING.md: quality times prompt fidelity, with false self-review claims costing double.",
+});
 
 const root = document.documentElement;
 try { const t = localStorage.getItem("theme"); if (t) root.dataset.theme = t; } catch (e) {}
