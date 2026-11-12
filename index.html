@@ -168,6 +168,7 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:13px;display:flex;flex-w
 .ac-line{fill:none;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
 .ac-dot{stroke:var(--ink);stroke-width:1.5}
 .ac-label{font:13px Inter,sans-serif;fill:var(--ink)}
+.ac-stack{display:grid;gap:20px}
 .ac-sub{color:var(--muted);font-size:13px;margin:8px 0 0}
 .card.pending{opacity:.72;box-shadow:none;border-style:dashed}
 .card.pending:hover{transform:none}
@@ -264,10 +265,17 @@ tr.pending td{color:var(--muted);font-style:italic}
   <section>
     <h2>What the extra effort bought</h2>
     <p class="sub">One dot per finished entry. Hover a dot for its exact values.</p>
-    <div class="legend"><span><i></i>Opus 5.5</span><span><i class="fable"></i>Fable 5.2</span></div>
-    <div class="scatter-grid">
-      <figure class="chart"><figcaption>Time against cost</figcaption><svg id="plot-time" viewBox="0 0 360 260" role="img" aria-label="Scatter of build time in minutes against cost in dollars"></svg></figure>
-      <figure class="chart"><figcaption>Unit tests against cost</figcaption><svg id="plot-tests" viewBox="0 0 360 260" role="img" aria-label="Scatter of passing unit tests against cost in dollars"></svg></figure>
+    <div class="ac-stack">
+      <div class="ac-card">
+        <div class="ac-head"><b>Time against cost</b><span>One dot per finished entry</span></div>
+        <div class="ac-legend ac-legend-sc"></div>
+        <div class="ac-scroll"><svg id="plot-time" viewBox="0 0 860 440" role="img" aria-label="Build time in minutes against cost in dollars, one line per model"></svg></div>
+      </div>
+      <div class="ac-card">
+        <div class="ac-head"><b>Unit tests against cost</b><span>One dot per finished entry</span></div>
+        <div class="ac-legend ac-legend-sc"></div>
+        <div class="ac-scroll"><svg id="plot-tests" viewBox="0 0 860 440" role="img" aria-label="Passing unit tests against cost in dollars, one line per model"></svg></div>
+      </div>
     </div>
   </section>
 
@@ -507,50 +515,65 @@ document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click"
 }));
 renderGrid([...ENTRIES].sort(SORTS.score));
 
-// Scatter plots: one dot per finished entry, cost on y.
-const CMAX = Math.max(...DONE.map(e => e.cost));
-const Y_STEP = CMAX > 80 ? 20 : 10, Y_MIN = 0, Y_MAX = Math.ceil(CMAX / Y_STEP) * Y_STEP;
-const TMAX = Math.ceil(Math.max(...DONE.map(e => e.mins)) / 60) * 60;
-const NMAX = Math.ceil(Math.max(...DONE.map(e => e.tests)) / 50) * 50;
-const PLOTS = [
-  {id:"plot-time",  min:0, max:TMAX, step:60, val:e => e.mins,  fmt:v => `${v}m`, label:"Build time (min)"},
-  {id:"plot-tests", min:0, max:NMAX, step:50, val:e => e.tests, fmt:v => v,      label:"Passing unit tests"},
-];
-PLOTS.forEach(cfg => {
-  const W = 360, H = 260, m = {l:40, r:14, t:12, b:40};
-  const pw = W - m.l - m.r, ph = H - m.t - m.b;
-  const sx = v => m.l + (v - cfg.min) / (cfg.max - cfg.min) * pw;
-  const sy = v => m.t + (1 - (v - Y_MIN) / (Y_MAX - Y_MIN)) * ph;
-  let g = "";
-  for (let v = Y_MIN; v <= Y_MAX; v += Y_STEP) {
-    g += `<line class="gridline" x1="${m.l}" x2="${W - m.r}" y1="${sy(v)}" y2="${sy(v)}"/>`;
-    g += `<text class="tick" x="${m.l - 6}" y="${sy(v) + 3}" text-anchor="end">$${v}</text>`;
-  }
-  for (let v = cfg.min; v <= cfg.max; v += cfg.step) {
-    g += `<text class="tick" x="${sx(v)}" y="${H - m.b + 14}" text-anchor="middle">${cfg.fmt(v)}</text>`;
-  }
-  g += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}"/>`;
-  g += `<text class="axis-title" x="${m.l + pw / 2}" y="${H - 6}" text-anchor="middle">${cfg.label}</text>`;
-  g += `<text class="axis-title" transform="translate(12 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">Cost (USD)</text>`;
-  const placed = [];
-  const LABEL_H = 11, CHAR_W = 6.2;
-  const bad = b => b.x < m.l || b.x + b.w > W - 2 || b.y < 0 || placed.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y);
-  DONE.forEach(e => {
-    const x = sx(cfg.val(e)), y = sy(e.cost);
-    const text = `${isFable(e) ? "F" : "O"} ${EFFORT_LABEL[e.effort]}`, w = text.length * CHAR_W;
-    const options = [
-      {anchor:"start",  tx: x + 7, ty: y + 3, box: {x: x + 7, y: y - LABEL_H / 2 + 1}},
-      {anchor:"end",    tx: x - 7, ty: y + 3, box: {x: x - 7 - w, y: y - LABEL_H / 2 + 1}},
-      {anchor:"middle", tx: x,     ty: y - 8, box: {x: x - w / 2, y: y - 8 - LABEL_H + 2}},
-      {anchor:"middle", tx: x,     ty: y + 16, box: {x: x - w / 2, y: y + 6}},
-    ];
-    const pick = options.find(o => !bad({...o.box, w, h: LABEL_H})) || options[0];
-    placed.push({...pick.box, w, h: LABEL_H});
-    g += `<g><circle class="dot${isFable(e) ? " fable" : ""}" cx="${x}" cy="${y}" r="4.5"><title>${esc(name(e))}: ${cfg.label.toLowerCase()} ${cfg.fmt(cfg.val(e))}, cost ${usd(e.cost)}</title></circle>` +
-         `<text class="dot-label" x="${pick.tx}" y="${pick.ty}" text-anchor="${pick.anchor}">${esc(text)}</text></g>`;
+// Lower two charts: same look as the big one. Metric on x, cost (linear) on y,
+// one line per model, labels placed so they never sit on a dot or on each other.
+(function(){
+  const CMAXV = Math.max(...DONE.map(e => e.cost));
+  const YS = CMAXV > 80 ? 20 : 10, YH = Math.ceil(CMAXV / YS) * YS + YS;
+  const SHORTS = {medium:"Med", high:"High", xhigh:"Xhigh", max:"Max"};
+  const COL = {"Fable 5.2":"#6b9a8b", "Opus 5.5":"#d9673b"};
+  const tmax = Math.ceil(Math.max(...DONE.map(e => e.mins)) / 60) * 60 + 30;
+  const nmax = Math.ceil(Math.max(...DONE.map(e => e.tests)) / 50) * 50 + 25;
+  const CFG = [
+    {id:"plot-time",  max:tmax, step:60, val:e => e.mins,  fmt:v => v ? `${v / 60}h` : "0", label:"Build time (wall clock)", tip:e => fmt(e.mins)},
+    {id:"plot-tests", max:nmax, step:50, val:e => e.tests, fmt:v => v,                      label:"Passing unit tests",      tip:e => `${e.tests} tests`},
+  ];
+  const legend = Object.keys(COL).map(k => `<span><i style="background:${COL[k]}"></i>${esc(k)}</span>`).join("");
+  document.querySelectorAll(".ac-legend-sc").forEach(el => el.innerHTML = legend);
+  CFG.forEach(cfg => {
+    const W = 860, H = 440, m = {l:84, r:40, t:30, b:76};
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const sx = v => m.l + v / cfg.max * pw;
+    const sy = v => m.t + (1 - v / YH) * ph;
+    let g = "";
+    for (let v = 0; v <= YH; v += YS) {
+      g += `<line class="ac-grid" x1="${m.l}" x2="${W - m.r}" y1="${sy(v)}" y2="${sy(v)}"/>`;
+      g += `<text class="ac-tick" x="${m.l - 12}" y="${sy(v) + 4}" text-anchor="end">${v ? "$" + v : "$0"}</text>`;
+    }
+    for (let v = 0; v <= cfg.max; v += cfg.step) {
+      g += `<text class="ac-tick" x="${sx(v)}" y="${m.t + ph + 26}" text-anchor="middle">${cfg.fmt(v)}</text>`;
+    }
+    g += `<path class="ac-axis" d="M${m.l} ${m.t} V${m.t + ph} H${W - m.r}"/>`;
+    g += `<text class="ac-title" x="${m.l + pw / 2}" y="${H - 18}" text-anchor="middle">${cfg.label}</text>`;
+    g += `<text class="ac-title" transform="translate(22 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">Cost per run (USD)</text>`;
+    const pts = DONE.map(e => ({e, x: sx(cfg.val(e)), y: sy(e.cost)}));
+    Object.keys(COL).forEach(k => {
+      const line = pts.filter(p => p.e.model === k).sort((a, b) => a.e.cost - b.e.cost);
+      if (line.length > 1) g += `<polyline class="ac-line" stroke="${COL[k]}" points="${line.map(p => `${p.x},${p.y}`).join(" ")}"/>`;
+    });
+    pts.forEach(p => {
+      g += `<circle class="ac-dot" cx="${p.x}" cy="${p.y}" r="10" fill="${COL[p.e.model]}"><title>${esc(`${p.e.model} ${EFFORT_LABEL[p.e.effort]}: ${cost(p.e)}, ${cfg.tip(p.e)}`)}</title></circle>`;
+    });
+    // label placement: try above, below, right, left; skip any spot that hits a dot, a label or the plot edge
+    const boxes = pts.map(p => ({x: p.x - 11, y: p.y - 11, w: 22, h: 22}));
+    const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    const placed = [];
+    [...pts].sort((a, b) => a.y - b.y).forEach(p => {
+      const t = SHORTS[p.e.effort], w = t.length * 7.4 + 4, h = 15;
+      const opts = [
+        {x: p.x, y: p.y - 17, a: "middle", b: {x: p.x - w / 2, y: p.y - 17 - 12, w, h}},
+        {x: p.x, y: p.y + 28, a: "middle", b: {x: p.x - w / 2, y: p.y + 28 - 12, w, h}},
+        {x: p.x + 17, y: p.y + 4, a: "start", b: {x: p.x + 17, y: p.y - 8, w, h}},
+        {x: p.x - 17, y: p.y + 4, a: "end", b: {x: p.x - 17 - w, y: p.y - 8, w, h}},
+      ];
+      const ok = o => o.b.x >= m.l - 4 && o.b.x + o.b.w <= W - 4 && !boxes.some(q => hit(o.b, q)) && !placed.some(q => hit(o.b, q));
+      const pick = opts.find(ok) || opts[0];
+      placed.push(pick.b);
+      g += `<text class="ac-label" x="${pick.x}" y="${pick.y}" text-anchor="${pick.a}">${esc(t)}</text>`;
+    });
+    document.getElementById(cfg.id).innerHTML = g;
   });
-  document.getElementById(cfg.id).innerHTML = g;
-});
+})();
 
 // Time against cost and score against cost, styled after a classic accuracy-vs-cost chart.
 function drawCostChart({svg, legend, sub, Y, list, note}){
