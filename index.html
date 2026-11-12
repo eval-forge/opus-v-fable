@@ -210,7 +210,7 @@ tr.pending td{color:var(--muted);font-style:italic}
         <p class="callout"><b>Quality scores are not in yet.</b> Score and truthness to prompt get judged once all six entries are done, so nobody gets graded on a curve with two players still on the field. Until then, the hard numbers below are the only ones that count.</p>
         <dl>
           <dt>Time</dt><dd>Wall-clock build time, from the prompt landing to the finished pull request.</dd>
-          <dt>Cost</dt><dd>Real spend for the run, in US dollars, from the usage tracker.</dd>
+          <dt>Cost</dt><dd>Real spend for the run, in US dollars, from the usage tracker. A ~ marks the run's own estimate until the tracker number lands.</dd>
           <dt>$/hr</dt><dd>Cost divided by time. How hard each model burns money while it works.</dd>
           <dt>Tests</dt><dd>Passing unit tests the entry shipped, as reported in its own self-review.</dd>
         </dl>
@@ -370,7 +370,7 @@ const ENTRIES = [
   {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:null},
   {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:false},
   {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:null},
-  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:false},
+  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.00, tests:226, pr:12, score:null, est:true},
 ];
 const EFFORT_ORDER = {medium:0, high:1, xhigh:2, max:3};
 const EFFORT_LABEL = {medium:"medium", high:"high", xhigh:"extra high", max:"max"};
@@ -381,6 +381,7 @@ const SRC = "https://github.com/eval-forge/opus-v-fable/tree/main/";
 const PRS = "https://github.com/eval-forge/eval-forge.github.io/pull/";
 const fmt = m => m >= 60 ? `${Math.floor(m/60)}h ${String(m%60).padStart(2,"0")}m` : `${m}m`;
 const usd = n => `$${n.toFixed(2)}`;
+const cost = e => (e.est ? "~" : "") + usd(e.cost);   // est: self-reported estimate until the tracker number lands
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const name = e => `${e.model} ${EFFORT_LABEL[e.effort]}`;
 const isFable = e => e.model.startsWith("Fable");
@@ -394,9 +395,9 @@ const MAX_COST = priciest.cost;
 document.getElementById("count-bar").textContent = `${DONE.length} of ${ENTRIES.length} finished`;
 document.getElementById("stats").innerHTML = [
   ["Finished", `${DONE.length} of ${ENTRIES.length}`, `${ENTRIES.length - DONE.length} still building`],
-  ["Spent so far", usd(spent), `across ${DONE.length} finished runs`],
+  ["Spent so far", (DONE.some(e => e.est) ? "~" : "") + usd(spent), `across ${DONE.length} finished runs`],
   ["Fastest", fmt(fastest.mins), `${esc(name(fastest))}, slowest was ${fmt(byTime.at(-1).mins)}`],
-  ["Cheapest", usd(cheapest.cost), `${esc(name(cheapest))}, priciest was ${usd(priciest.cost)}`],
+  ["Cheapest", usd(cheapest.cost), `${esc(name(cheapest))}, priciest was ${cost(priciest)}`],
 ].map(([k,v,s]) => `<div class="stat"><small>${k}</small><strong>${v}</strong><span>${s}</span></div>`).join("");
 
 const tableOrder = [...byCost, ...ENTRIES.filter(e => !e.done)];
@@ -405,7 +406,7 @@ document.getElementById("rank-body").innerHTML = tableOrder.map((e,i) => e.done 
     <td>${i + 1}</td>
     <td>${esc(name(e))}</td>
     <td class="num">${fmt(e.mins)}</td>
-    <td class="score">${usd(e.cost)}</td>
+    <td class="score">${cost(e)}</td>
     <td class="num">${usd(e.rate)}</td>
     <td class="num">${e.tests}</td>
     <td class="num"><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></td>
@@ -435,7 +436,7 @@ function card(e){
     <article class="card${e === cheapest ? " top" : ""}">
       <div class="preview" data-file="${e.dir}/">
         <span class="rank">${isFable(e) ? "Fable" : "Opus"} · ${esc(EFFORT_LABEL[e.effort])}</span>
-        <span class="score-badge">${usd(e.cost)}</span>
+        <span class="score-badge">${cost(e)}</span>
         <img src="previews/${e.dir}.jpg" alt="Main menu of the ${esc(name(e))} entry" loading="lazy">
         <button type="button" aria-label="Load live game for ${esc(name(e))}"><span>Load live game</span></button>
       </div>
@@ -443,7 +444,7 @@ function card(e){
         <div class="model"><h3>${esc(e.model)}</h3><span class="effort">${esc(EFFORT_LABEL[e.effort])}</span></div>
         <dl class="meta">
           <div><dt>Time</dt><dd>${fmt(e.mins)}</dd></div>
-          <div><dt>Cost</dt><dd>${usd(e.cost)}</dd></div>
+          <div><dt>Cost</dt><dd>${cost(e)}</dd></div>
           <div><dt>Tests</dt><dd>${e.tests}</dd></div>
           <div><dt>PR</dt><dd><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></dd></div>
         </dl>
@@ -483,10 +484,13 @@ document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click"
 renderGrid([...ENTRIES].sort(SORTS.cost));
 
 // Scatter plots: one dot per finished entry, cost on y.
-const Y_MIN = 0, Y_MAX = 60, Y_STEP = 10;
+const CMAX = Math.max(...DONE.map(e => e.cost));
+const Y_STEP = CMAX > 80 ? 20 : 10, Y_MIN = 0, Y_MAX = Math.ceil(CMAX / Y_STEP) * Y_STEP;
+const TMAX = Math.ceil(Math.max(...DONE.map(e => e.mins)) / 60) * 60;
+const NMAX = Math.ceil(Math.max(...DONE.map(e => e.tests)) / 50) * 50;
 const PLOTS = [
-  {id:"plot-time",  min:0, max:150, step:30, val:e => e.mins,  fmt:v => `${v}m`, label:"Build time (min)"},
-  {id:"plot-tests", min:0, max:160, step:40, val:e => e.tests, fmt:v => v,      label:"Passing unit tests"},
+  {id:"plot-time",  min:0, max:TMAX, step:60, val:e => e.mins,  fmt:v => `${v}m`, label:"Build time (min)"},
+  {id:"plot-tests", min:0, max:NMAX, step:50, val:e => e.tests, fmt:v => v,      label:"Passing unit tests"},
 ];
 PLOTS.forEach(cfg => {
   const W = 360, H = 260, m = {l:40, r:14, t:12, b:40};
@@ -536,8 +540,9 @@ PLOTS.forEach(cfg => {
   const W = 860, H = 440, m = {l:84, r:30, t:30, b:76};
   const pw = W - m.l - m.r, ph = H - m.t - m.b;
   const vals = DONE.map(e => e[Y.key]);
-  const Y_LO = 0, Y_HI = Math.max(180, Math.ceil(Math.max(...vals) / 30) * 30 + 30), Y_STEP = 30;
-  const X_LO = 10, X_HI = 100;
+  const Y_STEP = Math.max(...vals) > 200 ? 60 : 30;
+  const Y_LO = 0, Y_HI = Math.max(180, Math.ceil(Math.max(...vals) / Y_STEP) * Y_STEP + Y_STEP);
+  const X_LO = 10, X_HI = Math.max(...DONE.map(e => e.cost)) > 90 ? 200 : 100;
   const lx = v => Math.log10(v);
   const sx = v => m.l + (lx(v) - lx(X_LO)) / (lx(X_HI) - lx(X_LO)) * pw;
   const sy = v => m.t + (1 - (v - Y_LO) / (Y_HI - Y_LO)) * ph;
@@ -546,7 +551,7 @@ PLOTS.forEach(cfg => {
     g += `<line class="ac-grid" x1="${m.l}" x2="${W - m.r}" y1="${sy(v)}" y2="${sy(v)}"/>`;
     g += `<text class="ac-tick" x="${m.l - 12}" y="${sy(v) + 4}" text-anchor="end">${v ? Y.tick(v) : 0}</text>`;
   }
-  [10, 20, 50, 100].forEach(v => {
+  [10, 20, 50, 100, 200].filter(v => v <= X_HI).forEach(v => {
     g += `<text class="ac-tick" x="${sx(v)}" y="${m.t + ph + 26}" text-anchor="middle">${v}</text>`;
   });
   g += `<path class="ac-axis" d="M${m.l} ${m.t} V${m.t + ph} H${W - m.r}"/>`;
@@ -558,7 +563,7 @@ PLOTS.forEach(cfg => {
     if (pts.length > 1) g += `<polyline class="ac-line" stroke="${f.color}" points="${pts.map(e => `${sx(e.cost)},${sy(e[Y.key])}`).join(" ")}"/>`;
     pts.forEach(e => {
       const x = sx(e.cost), y = sy(e[Y.key]);
-      g += `<circle class="ac-dot" cx="${x}" cy="${y}" r="10" fill="${f.color}"><title>${esc(`${e.model} ${EFFORT_LABEL[e.effort]}: ${usd(e.cost)}, ${fmt(e.mins)}`)}</title></circle>`;
+      g += `<circle class="ac-dot" cx="${x}" cy="${y}" r="10" fill="${f.color}"><title>${esc(`${e.model} ${EFFORT_LABEL[e.effort]}: ${cost(e)}, ${fmt(e.mins)}`)}</title></circle>`;
       labels.push({x, y: y - 18, text: SHORT[e.effort]});
     });
   });
@@ -575,7 +580,7 @@ PLOTS.forEach(cfg => {
     FAMILIES.map(f => `<span><i style="background:${f.color}"></i>${esc(f.model)}</span>`).join("") +
     (pending.length ? `<span class="hollow"><i></i>Pending: ${pending.map(e => esc(`${e.model.split(" ")[0]} ${SHORT[e.effort]}`)).join(", ")}</span>` : "");
   document.getElementById("ac-sub").textContent =
-    `${DONE.length} of ${ENTRIES.length} runs plotted.` + (pending.length ? ` ${pending.length} still building and join the lines when they finish.` : "") +
+    `${DONE.length} of ${ENTRIES.length} runs plotted.` + (pending.length ? ` ${pending.length} still building and ${pending.length === 1 ? "joins its line when it finishes" : "join the lines when they finish"}.` : "") +
     " Quality scores come after judging.";
 })();
 
