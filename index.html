@@ -151,6 +151,24 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:13px;display:flex;flex-w
 .legend{display:flex;gap:16px;font:11px "JetBrains Mono",monospace;color:var(--muted);margin:0 0 6px}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:var(--accent)}
 .legend i.fable{background:var(--accent-2)}
+.ac-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 22px 14px;box-shadow:var(--shadow)}
+.ac-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin-bottom:8px}
+.ac-head b{font:600 20px/1.2 Inter,sans-serif}
+.ac-head span{color:var(--muted);font-size:15px}
+.ac-legend{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px 22px;font:600 15px Inter,sans-serif;margin:0 0 4px}
+.ac-legend i{display:inline-block;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);margin-right:8px;vertical-align:-2px}
+.ac-legend .hollow{font-weight:400;color:var(--muted)}
+.ac-legend .hollow i{background:transparent;border:1.5px dashed var(--muted)}
+.ac-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#plot-ac{display:block;width:100%;min-width:620px;height:auto}
+.ac-grid{stroke:var(--line);stroke-width:1}
+.ac-axis{stroke:var(--ink);stroke-width:1.2;fill:none}
+.ac-tick{font:13px Inter,sans-serif;fill:var(--muted)}
+.ac-title{font:15px Inter,sans-serif;fill:var(--ink)}
+.ac-line{fill:none;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.ac-dot{stroke:var(--ink);stroke-width:1.5}
+.ac-label{font:13px Inter,sans-serif;fill:var(--ink)}
+.ac-sub{color:var(--muted);font-size:13px;margin:8px 0 0}
 .card.pending{opacity:.72;box-shadow:none;border-style:dashed}
 .card.pending:hover{transform:none}
 .card.pending .preview{display:grid;place-items:center;color:#d8cdb8;font:600 12px "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase}
@@ -216,6 +234,17 @@ tr.pending td{color:var(--muted);font-style:italic}
       <button class="chip" data-sort="name" aria-pressed="false">Model name</button>
     </div>
     <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <h2>Time against cost</h2>
+    <p class="sub">One line per model, one dot per effort level, cost on a log scale. Down and to the left is cheap and quick. Up and to the right is where the extra effort went.</p>
+    <div class="ac-card">
+      <div class="ac-head"><b>The Lost Temple</b><span>Time vs. cost</span></div>
+      <div class="ac-legend" id="ac-legend"></div>
+      <div class="ac-scroll"><svg id="plot-ac" viewBox="0 0 860 440" role="img" aria-label="Build time against cost per run, log scale, one line per model"></svg></div>
+      <p class="ac-sub" id="ac-sub"></p>
+    </div>
   </section>
 
   <section>
@@ -334,12 +363,13 @@ Work autonomously until a full run is playable and fun, from arriving at dawn to
 <script>
 // mins = wall-clock build time, cost = billed USD from the usage tracker, tests = passing unit tests.
 // Entries with done:false are still building and show as pending.
+// score = judged quality, 0 to 100. Stays null until the judging pass.
 const ENTRIES = [
-  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7},
-  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8},
-  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9},
+  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:null},
+  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:null},
+  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:null},
   {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:false},
-  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10},
+  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:null},
   {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:false},
 ];
 const EFFORT_ORDER = {medium:0, high:1, xhigh:2, max:3};
@@ -493,6 +523,61 @@ PLOTS.forEach(cfg => {
   });
   document.getElementById(cfg.id).innerHTML = g;
 });
+
+// Time against cost, styled after a classic accuracy-vs-cost chart.
+// Swap Y to the score metric once judging lands (score is null until then).
+(function(){
+  const Y = {key:"mins", label:"Build time (wall clock)", tick:v => fmt(v)};
+  const FAMILIES = [
+    {model:"Fable 5.2", color:"#6b9a8b"},
+    {model:"Opus 5.5",  color:"#d9673b"},
+  ];
+  const SHORT = {medium:"Med", high:"High", xhigh:"Xhigh", max:"Max"};
+  const W = 860, H = 440, m = {l:84, r:30, t:30, b:76};
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const vals = DONE.map(e => e[Y.key]);
+  const Y_LO = 0, Y_HI = Math.max(180, Math.ceil(Math.max(...vals) / 30) * 30 + 30), Y_STEP = 30;
+  const X_LO = 10, X_HI = 100;
+  const lx = v => Math.log10(v);
+  const sx = v => m.l + (lx(v) - lx(X_LO)) / (lx(X_HI) - lx(X_LO)) * pw;
+  const sy = v => m.t + (1 - (v - Y_LO) / (Y_HI - Y_LO)) * ph;
+  let g = "";
+  for (let v = Y_LO; v <= Y_HI; v += Y_STEP) {
+    g += `<line class="ac-grid" x1="${m.l}" x2="${W - m.r}" y1="${sy(v)}" y2="${sy(v)}"/>`;
+    g += `<text class="ac-tick" x="${m.l - 12}" y="${sy(v) + 4}" text-anchor="end">${v ? Y.tick(v) : 0}</text>`;
+  }
+  [10, 20, 50, 100].forEach(v => {
+    g += `<text class="ac-tick" x="${sx(v)}" y="${m.t + ph + 26}" text-anchor="middle">${v}</text>`;
+  });
+  g += `<path class="ac-axis" d="M${m.l} ${m.t} V${m.t + ph} H${W - m.r}"/>`;
+  g += `<text class="ac-title" x="${m.l + pw / 2}" y="${H - 18}" text-anchor="middle">Cost per run (USD, log scale)</text>`;
+  g += `<text class="ac-title" transform="translate(22 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">${Y.label}</text>`;
+  const labels = [];
+  FAMILIES.forEach(f => {
+    const pts = DONE.filter(e => e.model === f.model).sort((a,b) => a.cost - b.cost);
+    if (pts.length > 1) g += `<polyline class="ac-line" stroke="${f.color}" points="${pts.map(e => `${sx(e.cost)},${sy(e[Y.key])}`).join(" ")}"/>`;
+    pts.forEach(e => {
+      const x = sx(e.cost), y = sy(e[Y.key]);
+      g += `<circle class="ac-dot" cx="${x}" cy="${y}" r="10" fill="${f.color}"><title>${esc(`${e.model} ${EFFORT_LABEL[e.effort]}: ${usd(e.cost)}, ${fmt(e.mins)}`)}</title></circle>`;
+      labels.push({x, y: y - 18, text: SHORT[e.effort]});
+    });
+  });
+  labels.sort((a,b) => a.x - b.x).forEach((l, i, arr) => {
+    for (let j = 0; j < i; j++) {
+      const o = arr[j];
+      if (Math.abs(o.x - l.x) < 42 && Math.abs(o.y - l.y) < 14) l.y = o.y - 15;
+    }
+    g += `<text class="ac-label" x="${l.x}" y="${l.y}" text-anchor="middle">${esc(l.text)}</text>`;
+  });
+  document.getElementById("plot-ac").innerHTML = g;
+  const pending = ENTRIES.filter(e => !e.done);
+  document.getElementById("ac-legend").innerHTML =
+    FAMILIES.map(f => `<span><i style="background:${f.color}"></i>${esc(f.model)}</span>`).join("") +
+    (pending.length ? `<span class="hollow"><i></i>Pending: ${pending.map(e => esc(`${e.model.split(" ")[0]} ${SHORT[e.effort]}`)).join(", ")}</span>` : "");
+  document.getElementById("ac-sub").textContent =
+    `${DONE.length} of ${ENTRIES.length} runs plotted.` + (pending.length ? ` ${pending.length} still building and join the lines when they finish.` : "") +
+    " Quality scores come after judging.";
+})();
 
 const root = document.documentElement;
 try { const t = localStorage.getItem("theme"); if (t) root.dataset.theme = t; } catch (e) {}
