@@ -177,6 +177,9 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:13px;display:flex;flex-w
 @keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
 @media (prefers-reduced-motion:reduce){.card.pending .preview .pulse{animation:none}}
 .btn.disabled{pointer-events:none;opacity:.5}
+.dl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;font:11px "JetBrains Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.dl span{margin-right:4px}
+.dl .chip{text-transform:none;letter-spacing:0}
 .family{font:11px "JetBrains Mono",monospace;color:var(--muted)}
 tr.pending td{color:var(--muted);font-style:italic}
 .callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:12px;padding:16px 20px;color:var(--muted);font-size:14px;margin:0}
@@ -187,7 +190,7 @@ tr.pending td{color:var(--muted);font-style:italic}
 </head>
 <body>
 <div class="topbar">
-  <a class="brand" href="https://eval-forge.github.io" aria-label="Eval Forge home"><svg class="logo" aria-hidden="true" viewBox="0 0 96 100" fill="none"><defs><linearGradient id="forge-blue" x1="15" y1="12" x2="80" y2="85" gradientUnits="userSpaceOnUse"><stop stop-color="#55c5ff"/><stop offset="1" stop-color="#2e50ed"/></linearGradient></defs><rect x="39" y="24" width="19" height="19" rx="4" fill="#b6eaff"/><rect x="59" y="5" width="12" height="12" rx="3" fill="#2e50ed"/><rect x="70" y="29" width="10" height="10" rx="2.5" fill="#43b7ff"/><rect x="25" y="39" width="11" height="11" rx="2.5" fill="#82d8ff"/><rect x="60" y="44" width="12" height="12" rx="3" fill="#419aff"/><rect x="31" y="17" width="6" height="6" rx="1.7" fill="#b6eaff"/><path d="M9 61h78c-4 8-11 12-21 16-5 2-7 5-7 9 0 3 2 6 7 9H31c5-4 7-7 7-11 0-5-4-8-12-10-7-2-13-6-17-13Z" fill="url(#forge-blue)"/><path d="M9 61h78l-33 8c-7 2-11 6-13 12-2-4-7-6-15-7-7-2-13-6-17-13Z" fill="#d4eeff" opacity=".72"/></svg><b>Eval Forge</b></a>
+  <a class="brand" href="https://github.com/eval-forge" aria-label="Eval Forge on GitHub"><svg class="logo" aria-hidden="true" viewBox="0 0 96 100" fill="none"><defs><linearGradient id="forge-blue" x1="15" y1="12" x2="80" y2="85" gradientUnits="userSpaceOnUse"><stop stop-color="#55c5ff"/><stop offset="1" stop-color="#2e50ed"/></linearGradient></defs><rect x="39" y="24" width="19" height="19" rx="4" fill="#b6eaff"/><rect x="59" y="5" width="12" height="12" rx="3" fill="#2e50ed"/><rect x="70" y="29" width="10" height="10" rx="2.5" fill="#43b7ff"/><rect x="25" y="39" width="11" height="11" rx="2.5" fill="#82d8ff"/><rect x="60" y="44" width="12" height="12" rx="3" fill="#419aff"/><rect x="31" y="17" width="6" height="6" rx="1.7" fill="#b6eaff"/><path d="M9 61h78c-4 8-11 12-21 16-5 2-7 5-7 9 0 3 2 6 7 9H31c5-4 7-7 7-11 0-5-4-8-12-10-7-2-13-6-17-13Z" fill="url(#forge-blue)"/><path d="M9 61h78l-33 8c-7 2-11 6-13 12-2-4-7-6-15-7-7-2-13-6-17-13Z" fill="#d4eeff" opacity=".72"/></svg><b>Eval Forge</b></a>
   <span class="hide-sm">Three.js relic heist</span>
   <span class="hide-sm" id="count-bar"></span>
   <a href="https://eval-forge.github.io" target="_blank" rel="noopener noreferrer">Back to Eval Forge homepage ↗</a>
@@ -214,15 +217,21 @@ tr.pending td{color:var(--muted);font-style:italic}
           <dt>P</dt><dd>Prompt fidelity, 0 to 1: share of the prompt's requirements met, checked against the running build. A claim in SELF_REVIEW.md that the judge caught being false costs double.</dd>
           <dt>Time</dt><dd>Wall-clock build time, from the prompt landing to the finished pull request.</dd>
           <dt>Cost</dt><dd>Real spend for the run, in US dollars, from the usage tracker.</dd>
+          <dt>Tokens</dt><dd>Input, output, cache-write and cache-read tokens added up, as each entry reported in its own SELF_REVIEW.md. Hover for the exact count.</dd>
           <dt>$/hr</dt><dd>Cost divided by time. How hard each model burns money while it works.</dd>
           <dt>Tests</dt><dd>Passing unit tests the entry shipped, as reported in its own self-review.</dd>
         </dl>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Model</th><th>Score</th><th>Time</th><th>Cost</th><th>$/hr</th><th>Tests</th><th>PR</th></tr></thead>
+          <thead><tr><th>#</th><th>Model</th><th>Effort</th><th>Score</th><th>Time</th><th>Cost</th><th>Tokens</th><th>$/hr</th><th>Tests</th><th>PR</th></tr></thead>
           <tbody id="rank-body"></tbody>
         </table>
+        <div class="dl" role="group" aria-label="Download the data">
+          <span>Download the data</span>
+          <button type="button" class="chip" id="dl-csv">CSV ↓</button>
+          <button type="button" class="chip" id="dl-pdf">PDF ↓</button>
+        </div>
       </div>
     </div>
   </section>
@@ -381,18 +390,19 @@ Work autonomously until a full run is playable and fun, from arriving at dawn to
 // mins = wall-clock build time, cost = billed USD from the usage tracker, tests = passing unit tests.
 // Entries with done:false are still building and show as pending.
 // score = S x P from JUDGING.md (quality 0-100 times prompt fidelity 0-1).
+// tok = [input, output, cache write, cache read] tokens as each entry reported in its own SELF_REVIEW.md.
 const ENTRIES = [
-  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:64.2},
-  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:67.7},
-  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:84.0},
-  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:89.9},
-  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:73.3},
-  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:86.8},
+  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:64.2, tok:[285, 305255, 523793, 31450598]},
+  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:67.7, tok:[250, 369648, 646574, 31114354]},
+  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:84.0, tok:[565, 622579, 1235348, 70732065]},
+  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:89.9, tok:[1483, 1349402, 2827414, 187418463]},
+  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:73.3, tok:[466, 614039, 1206014, 58849638]},
+  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:86.8, tok:[1000, 1144385, 2437248, 126126239]},
 ];
 const EFFORT_ORDER = {medium:0, high:1, xhigh:2, max:3};
 const EFFORT_LABEL = {medium:"medium", high:"high", xhigh:"extra high", max:"max"};
 const DONE = ENTRIES.filter(e => e.done);
-DONE.forEach(e => e.rate = e.cost / (e.mins / 60));
+DONE.forEach(e => { e.rate = e.cost / (e.mins / 60); e.tokens = e.tok.reduce((a, b) => a + b, 0); });
 
 const SRC = "https://github.com/eval-forge/opus-v-fable/tree/main/";
 const PRS = "https://github.com/eval-forge/eval-forge.github.io/pull/";
@@ -403,6 +413,9 @@ const sc = e => e.score == null ? "…" : e.score.toFixed(1);   // est: self-rep
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const name = e => `${e.model} ${EFFORT_LABEL[e.effort]}`;
 const isFable = e => e.model.startsWith("Fable");
+const tokM = n => `${(n / 1e6).toFixed(1)}M`;
+const tokFull = n => n.toLocaleString("en-US");
+const PLAY = e => `play/${e.dir}/`;
 
 const byCost = [...DONE].sort((a,b) => a.cost - b.cost);
 const byTime = [...DONE].sort((a,b) => a.mins - b.mins);
@@ -429,16 +442,18 @@ const topRow = best || cheapest;
 document.getElementById("rank-body").innerHTML = tableOrder.map((e,i) => e.done ? `
   <tr class="${e === topRow ? "top" : ""}">
     <td>${i + 1}</td>
-    <td>${esc(name(e))}</td>
+    <td><a href="${PLAY(e)}">${esc(e.model)}</a></td>
+    <td>${esc(EFFORT_LABEL[e.effort])}</td>
     <td class="score">${sc(e)}</td>
     <td class="num">${fmt(e.mins)}</td>
     <td class="num">${cost(e)}</td>
+    <td class="num" title="${tokFull(e.tokens)} tokens">${tokM(e.tokens)}</td>
     <td class="num">${usd(e.rate)}</td>
     <td class="num">${e.tests}</td>
     <td class="num"><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></td>
   </tr>` : `
   <tr class="pending">
-    <td>…</td><td>${esc(name(e))}</td><td colspan="6">still building</td>
+    <td>…</td><td>${esc(e.model)}</td><td>${esc(EFFORT_LABEL[e.effort])}</td><td colspan="7">still building</td>
   </tr>`).join("");
 
 function card(e){
@@ -451,8 +466,7 @@ function card(e){
         <dl class="meta">
           <div><dt>Time</dt><dd>…</dd></div>
           <div><dt>Cost</dt><dd>…</dd></div>
-          <div><dt>Tests</dt><dd>…</dd></div>
-          <div><dt>PR</dt><dd>…</dd></div>
+          <div><dt>Tokens</dt><dd>…</dd></div>
         </dl>
         <div class="timebar"><i style="width:0"></i></div>
         <div class="links"><span class="btn primary disabled">Open game ↗</span><span class="btn disabled">View source</span></div>
@@ -472,11 +486,11 @@ function card(e){
           <div><dt>Score</dt><dd>${sc(e)}</dd></div>
           <div><dt>Time</dt><dd>${fmt(e.mins)}</dd></div>
           <div><dt>Cost</dt><dd>${cost(e)}</dd></div>
-          <div><dt>PR</dt><dd><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></dd></div>
+          <div><dt>Tokens</dt><dd title="${tokFull(e.tokens)} tokens">${tokM(e.tokens)}</dd></div>
         </dl>
         <div class="timebar" title="${usd(e.cost)} of ${usd(MAX_COST)}, the priciest finished run"><i style="width:${(e.cost / MAX_COST * 100).toFixed(1)}%"></i></div>
         <div class="links">
-          <a class="btn primary" href="${e.dir}/" target="_blank" rel="noopener">Open game ↗</a>
+          <a class="btn primary" href="${PLAY(e)}" target="_blank" rel="noopener">Open game ↗</a>
           <a class="btn" href="${SRC}${e.dir}/source" target="_blank" rel="noopener noreferrer">View source</a>
         </div>
       </div>
@@ -509,6 +523,76 @@ document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click"
   renderGrid([...ENTRIES].sort(SORTS[chip.dataset.sort]));
 }));
 renderGrid([...ENTRIES].sort(SORTS.score));
+
+// Download the data: CSV straight from ENTRIES, PDF drawn by a tiny built-in writer (no libraries).
+(function(){
+  const ORIGIN = "https://eval-forge.github.io/opus-v-fable/";
+  const rows = tableOrder.filter(e => e.done).map((e, i) => ({
+    rank: i + 1, model: e.model, effort: EFFORT_LABEL[e.effort], score: e.score == null ? "" : e.score.toFixed(1),
+    time: fmt(e.mins), mins: e.mins, cost: e.cost.toFixed(2), rate: e.rate.toFixed(2),
+    tin: e.tok[0], tout: e.tok[1], tcw: e.tok[2], tcr: e.tok[3], tokens: e.tokens,
+    tests: e.tests, pr: e.pr, play: ORIGIN + PLAY(e), src: SRC + e.dir + "/source",
+  }));
+  const stamp = "lost-temple-opus-vs-fable";
+  function save(blob, file){
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = file;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  document.getElementById("dl-csv").addEventListener("click", () => {
+    const head = ["rank","model","effort","score","build_time","build_minutes","cost_usd","usd_per_hour","input_tokens","output_tokens","cache_write_tokens","cache_read_tokens","total_tokens","unit_tests","pr","play_url","source_url"];
+    const keys = ["rank","model","effort","score","time","mins","cost","rate","tin","tout","tcw","tcr","tokens","tests","pr","play","src"];
+    const q = v => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+    const csv = [head.join(","), ...rows.map(r => keys.map(k => q(r[k])).join(","))].join("\r\n") + "\r\n";
+    save(new Blob([csv], {type: "text/csv;charset=utf-8"}), stamp + ".csv");
+  });
+  document.getElementById("dl-pdf").addEventListener("click", () => {
+    const W = 842, H = 595, M = 40;                      // A4 landscape, points
+    const cols = [["#",22],["Model",68],["Effort",62],["Score",44],["Time",50],["Cost",56],["$/hr",48],["Input",46],["Output",62],["Cache write",72],["Cache read",78],["Total tokens",82],["Tests",40],["PR",32]];
+    const cells = r => [r.rank, r.model, r.effort, r.score, r.time, "$" + r.cost, "$" + r.rate, tokFull(r.tin), tokFull(r.tout), tokFull(r.tcw), tokFull(r.tcr), tokFull(r.tokens), r.tests, "#" + r.pr];
+    const pe = t => String(t).replace(/[\\()]/g, c => "\\" + c).replace(/[^\x20-\x7e]/g, "");
+    const out = [];
+    const text = (x, y, size, str, bold) => out.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${x} ${y} Td (${pe(str)}) Tj ET`);
+    const fill = (x, y, w, h, g) => out.push(`${g} g ${x} ${y} ${w} ${h} re f 0 g`);
+    text(M, H - M - 10, 20, "The Lost Temple: Opus vs Fable", true);
+    text(M, H - M - 30, 10, "Eval Forge. One prompt, six runs. Score = S x P (quality 0-100 times prompt fidelity 0-1). Ranked by score.");
+    let y = H - M - 62;
+    const rowH = 22;
+    fill(M, y - 7, W - 2 * M, rowH, 0.12);
+    out.push("1 g");
+    let x = M + 6;
+    cols.forEach(([h, w]) => { text(x, y, 8, h, true); x += w; });
+    out.push("0 g");
+    rows.forEach((r, i) => {
+      y -= rowH;
+      if (i % 2 === 0) fill(M, y - 7, W - 2 * M, rowH, 0.94);
+      x = M + 6;
+      cells(r).forEach((c, j) => { text(x, y, 8.5, c, j === 3); x += cols[j][1]; });
+    });
+    y -= 34;
+    [
+      "Time is wall-clock build time, prompt to finished pull request. Cost is billed USD from the usage tracker.",
+      "Tokens are as each entry reported in its own SELF_REVIEW.md: input + output + cache write + cache read.",
+      "Play every build at " + ORIGIN + " . Judge's reasoning: github.com/eval-forge/opus-v-fable/blob/main/JUDGING.md",
+    ].forEach(l => { text(M, y, 8.5, l); y -= 14; });
+    const stream = out.join("\n");
+    const objs = [
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>`,
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    ];
+    let pdf = "%PDF-1.4\n";
+    const offs = objs.map((o, i) => { const at = pdf.length; pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; return at; });
+    const xref = pdf.length;
+    pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("");
+    pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    save(new Blob([pdf], {type: "application/pdf"}), stamp + ".pdf");
+  });
+})();
 
 // Lower chart: same look as the big one. Metric on x, cost (linear) on y,
 // one line per model, labels placed so they never sit on a dot or on each other.

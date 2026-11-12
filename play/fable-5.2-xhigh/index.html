@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Fable 5.2 extra high · Lost Temple</title>
+<meta name="description" content="The Lost Temple, as built by Claude Fable 5.2 extra high. Eval Forge: Opus vs Fable.">
+<style>
+:root{--bar-h:34px}
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+#ef-bar{position:fixed;top:0;left:0;right:0;height:var(--bar-h);z-index:2;display:flex;align-items:center;gap:18px;padding:0 16px;background:#0f0f0f;color:#bdb8ae;font:11px/1 ui-monospace,"JetBrains Mono",SFMono-Regular,Menlo,Consolas,monospace;box-sizing:border-box;white-space:nowrap;overflow:hidden}
+#ef-bar a{color:#f4f1ea;text-decoration:none}
+#ef-bar a:hover{text-decoration:underline}
+#ef-bar .ef-brand{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+#ef-bar .ef-logo{width:14px;height:auto;display:block}
+#ef-bar .ef-f b{color:#f4f1ea;font-weight:600}
+#ef-bar .ef-back{margin-left:auto}
+#ef-bar .ef-short{display:none}
+#game{position:fixed;top:var(--bar-h);left:0;width:100%;height:calc(100% - var(--bar-h));border:0;display:block;background:#000}
+@media (max-width:1000px){#ef-bar .ef-opt{display:none}}
+@media (max-width:640px){#ef-bar{gap:10px;padding:0 12px;font-size:10px}#ef-bar .ef-f{display:none}#ef-bar .ef-f.ef-model{display:inline}#ef-bar .ef-back .ef-long{display:none}#ef-bar .ef-short{display:inline}}
+</style>
+</head>
+<body>
+<div id="ef-bar" role="banner">
+  <a class="ef-brand" href="https://github.com/eval-forge" target="_top"><svg class="ef-logo" aria-hidden="true" viewBox="0 0 96 100" fill="none"><defs><linearGradient id="ef-blue" x1="15" y1="12" x2="80" y2="85" gradientUnits="userSpaceOnUse"><stop stop-color="#55c5ff"/><stop offset="1" stop-color="#2e50ed"/></linearGradient></defs><rect x="39" y="24" width="19" height="19" rx="4" fill="#b6eaff"/><rect x="59" y="5" width="12" height="12" rx="3" fill="#2e50ed"/><rect x="70" y="29" width="10" height="10" rx="2.5" fill="#43b7ff"/><rect x="25" y="39" width="11" height="11" rx="2.5" fill="#82d8ff"/><rect x="60" y="44" width="12" height="12" rx="3" fill="#419aff"/><rect x="31" y="17" width="6" height="6" rx="1.7" fill="#b6eaff"/><path d="M9 61h78c-4 8-11 12-21 16-5 2-7 5-7 9 0 3 2 6 7 9H31c5-4 7-7 7-11 0-5-4-8-12-10-7-2-13-6-17-13Z" fill="url(#ef-blue)"/><path d="M9 61h78l-33 8c-7 2-11 6-13 12-2-4-7-6-15-7-7-2-13-6-17-13Z" fill="#d4eeff" opacity=".72"/></svg>Eval Forge</a>
+  <span class="ef-f ef-model">Model: <b>Claude Fable 5.2</b></span>
+  <span class="ef-f">Effort: <b>extra high</b></span>
+  <span class="ef-f">Time: <b>5h 00m</b></span>
+  <span class="ef-f">Cost: <b>$110.71</b></span>
+  <span class="ef-f ef-opt">Total tokens: <b>129,708,872</b></span>
+  <a class="ef-back" href="https://eval-forge.github.io" target="_top"><span class="ef-long">Back to Eval Forge homepage</span><span class="ef-short">Back</span> ↗</a>
+</div>
+<iframe id="game" src="../../fable-5.2-xhigh/" title="The Lost Temple by Claude Fable 5.2 extra high" allow="fullscreen; pointer-lock; autoplay; gamepad" allowfullscreen></iframe>
+<script>
+// Keyboard input goes to the game as soon as it loads, so nobody has to click into the frame first.
+(function(){
+  var f = document.getElementById("game");
+  f.addEventListener("load", function(){ try { f.contentWindow.focus(); } catch (e) {} });
+})();
+</script>
+</body>
+</html>
