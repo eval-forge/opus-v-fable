@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lost Temple: Opus vs Fable</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 100" fill="none"%3E%3Cdefs%3E%3ClinearGradient id="forge-blue" x1="15" y1="12" x2="80" y2="85" gradientUnits="userSpaceOnUse"%3E%3Cstop stop-color="%2355c5ff"/%3E%3Cstop offset="1" stop-color="%232e50ed"/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x="39" y="24" width="19" height="19" rx="4" fill="%23b6eaff"/%3E%3Crect x="59" y="5" width="12" height="12" rx="3" fill="%232e50ed"/%3E%3Crect x="70" y="29" width="10" height="10" rx="2.5" fill="%2343b7ff"/%3E%3Crect x="25" y="39" width="11" height="11" rx="2.5" fill="%2382d8ff"/%3E%3Crect x="60" y="44" width="12" height="12" rx="3" fill="%23419aff"/%3E%3Crect x="31" y="17" width="6" height="6" rx="1.7" fill="%23b6eaff"/%3E%3Cpath d="M9 61h78c-4 8-11 12-21 16-5 2-7 5-7 9 0 3 2 6 7 9H31c5-4 7-7 7-11 0-5-4-8-12-10-7-2-13-6-17-13Z" fill="url%28%23forge-blue%29"/%3E%3Cpath d="M9 61h78l-33 8c-7 2-11 6-13 12-2-4-7-6-15-7-7-2-13-6-17-13Z" fill="%23d4eeff" opacity=".72"/%3E%3C/svg%3E" type="image/svg+xml">
+<meta name="description" content="Eval Forge: Opus 5.5 and Fable 5.2 at different effort levels go head to head building the same Three.js relic-heist game, The Lost Temple.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6efe4;--surface:#fffaf2;--ink:#2a2620;--muted:#776e62;--line:rgba(60,45,30,.14);
+  --accent:#c4582f;--accent-2:#2f5d62;--bar:#e3b07a;--bar-best:#2f5d62;--shadow:0 10px 30px rgba(80,50,20,.10);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141619;--surface:#1c1f24;--ink:#f1ebe0;--muted:#a39a8d;--line:rgba(255,240,220,.12);
+  --accent:#ef8a5c;--accent-2:#7fc1c4;--bar:#a8754a;--bar-best:#7fc1c4;--shadow:0 10px 30px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#141619;--surface:#1c1f24;--ink:#f1ebe0;--muted:#a39a8d;--line:rgba(255,240,220,.12);
+  --accent:#ef8a5c;--accent-2:#7fc1c4;--bar:#a8754a;--bar-best:#7fc1c4;--shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;height:34px;padding:0 16px;background:#0f0f0f;color:#bdb8ae;font:11px/1 "JetBrains Mono",monospace}
+.topbar b{color:#f4f1ea;font-weight:600}
+.topbar .brand{display:inline-flex;align-items:center;gap:8px}
+.topbar .logo{width:14px;height:auto;display:block}
+.topbar a{margin-left:auto;color:#f4f1ea;text-decoration:none;white-space:nowrap}
+.topbar a:hover{text-decoration:underline}
+.topbar a.brand{margin-left:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+header.hero{padding:72px 0 40px;display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:end}
+.eyebrow{font:600 11px/1 "JetBrains Mono",monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px}
+.eyebrow:before{content:"";width:26px;height:1px;background:currentColor}
+h1{font:400 clamp(44px,7vw,84px)/.95 Fraunces,Georgia,serif;letter-spacing:-.04em;margin:20px 0 18px}
+h1 em{color:var(--accent);font-style:italic}
+.lede{color:var(--muted);max-width:52ch;margin:0}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.stat{background:var(--surface);padding:18px 20px}
+.stat small{display:block;font:11px "JetBrains Mono",monospace;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.stat strong{display:block;font:600 26px/1.2 Fraunces,Georgia,serif;margin-top:6px}
+.stat span{font-size:12px;color:var(--muted)}
+section{padding:28px 0}
+h2{font:400 30px/1.1 Fraunces,Georgia,serif;letter-spacing:-.02em;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 22px;font-size:14px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:999px;font:500 13px Inter,sans-serif;cursor:pointer;transition:background .15s,color .15s}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .2s}
+.card:hover{transform:translateY(-3px)}
+.preview{position:relative;aspect-ratio:16/10;background:linear-gradient(160deg,#f7c38d,#e27d5a 55%,#5b4a6e);overflow:hidden}
+.preview iframe{position:absolute;top:0;left:0;width:200%;height:200%;border:0;transform:scale(.5);transform-origin:0 0;pointer-events:none}
+.preview button{position:absolute;inset:0;width:100%;border:0;background:transparent;color:#fff;cursor:pointer;display:grid;place-items:center;font:600 13px Inter,sans-serif;letter-spacing:.04em}
+.preview button span{background:rgba(15,15,15,.55);backdrop-filter:blur(6px);padding:10px 18px;border-radius:999px}
+.preview .voxels{position:absolute;bottom:0;left:0;right:0;height:38%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 14px,transparent 14px 28px),linear-gradient(#3b6e57,#2b4f3f);clip-path:polygon(0 40%,12% 30%,24% 38%,38% 22%,52% 34%,66% 18%,80% 30%,100% 24%,100% 100%,0 100%)}
+.preview .tower{position:absolute;bottom:30%;left:68%;width:18px;height:46%;background:repeating-linear-gradient(#f4efe6 0 12px,#c84a3a 12px 24px);box-shadow:0 0 30px rgba(255,220,150,.6)}
+.rank{position:absolute;top:12px;left:12px;z-index:2;font:600 11px "JetBrains Mono",monospace;background:rgba(15,15,15,.7);color:#fff;padding:5px 9px;border-radius:999px}
+.score-badge{position:absolute;top:12px;right:12px;z-index:2;font:600 12px "JetBrains Mono",monospace;background:var(--accent);color:#fff;padding:5px 9px;border-radius:999px}
+.body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:12px;flex:1}
+.model{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.model h3{margin:0;font:600 22px/1.15 Fraunces,Georgia,serif;letter-spacing:-.01em}
+.effort{font:11px "JetBrains Mono",monospace;color:var(--muted);border:1px solid var(--line);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.scene-title{margin:0;color:var(--muted);font-size:13px;font-style:italic}
+.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0}
+.meta div{border-top:1px solid var(--line);padding-top:8px}
+.meta dt{font:10px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.meta dd{margin:2px 0 0;font:600 14px "JetBrains Mono",monospace}
+.timebar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.timebar i{display:block;height:100%;background:var(--bar);border-radius:3px}
+.card.top .timebar i{background:var(--bar-best)}
+.links{display:flex;gap:8px;margin-top:auto;padding-top:4px}
+.btn{flex:1;text-align:center;text-decoration:none;padding:10px 12px;border-radius:10px;font:600 13px Inter,sans-serif;border:1px solid var(--line)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{filter:brightness(1.06)}
+.btn:not(.primary):hover{border-color:var(--ink)}
+.method{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+.eq-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+.eq-card img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:12px}
+@media (max-width:1100px){.eq-card img{max-width:88%}}
+.eq-card dl{margin:18px 0 0;display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px}
+.eq-card dt{font:600 14px "JetBrains Mono",monospace;color:var(--accent)}
+.eq-card dd{margin:0;color:var(--muted)}
+.weights{margin:14px 0 0;color:var(--muted);font-size:13px}
+.table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow-x:auto;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:12px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:600 11px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+tbody tr:last-child td{border-bottom:0}
+td.score{font:600 16px "JetBrains Mono",monospace;color:var(--ink)}
+tr.top td.score{color:var(--accent)}
+td.num{font-family:"JetBrains Mono",monospace}
+.chart{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 18px 12px}
+.chart figcaption{font:600 15px Inter,sans-serif;margin:0 0 8px}
+.chart svg{display:block;width:100%;height:auto}
+.scatter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.gridline{stroke:var(--line);stroke-width:1}
+.axis{stroke:var(--muted);stroke-width:1}
+.tick{font:10px "JetBrains Mono",monospace;fill:var(--muted)}
+.axis-title{font:11px Inter,sans-serif;fill:var(--muted)}
+.dot{fill:var(--accent);stroke:var(--surface);stroke-width:2;cursor:default}
+.dot-label{font:10px "JetBrains Mono",monospace;fill:var(--ink)}
+details.prompt{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 22px}
+details.prompt summary{cursor:pointer;font:600 15px Inter,sans-serif}
+details.prompt pre{white-space:pre-wrap;font:12.5px/1.65 "JetBrains Mono",monospace;color:var(--muted);margin:16px 0 0;max-height:420px;overflow:auto}
+footer{padding:40px 0 60px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:30px}
+.theme{position:fixed;right:16px;bottom:16px;z-index:30;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:42px;height:42px;border-radius:50%;cursor:pointer;box-shadow:var(--shadow);font:16px Inter,sans-serif}
+@media (max-width:820px){
+  header.hero{grid-template-columns:1fr;gap:28px;padding:48px 0 24px}
+  .grid{grid-template-columns:1fr}
+  .method{grid-template-columns:1fr}
+  .scatter-grid{grid-template-columns:1fr}
+  .topbar{gap:10px;font-size:10px}
+  .topbar .hide-sm{display:none}
+  .meta{grid-template-columns:1fr 1fr}
+  .table-wrap{overflow:hidden}
+  table{font-size:12px}
+  th,td{padding:10px 4px;white-space:normal}
+  th:first-child,td:first-child{display:none}
+  td.score{font-size:14px}
+}
+.preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.preview{background:linear-gradient(170deg,#3f7f95,#f3c676 58%,#c9853c 62%,#23525c)}
+.meta{grid-template-columns:repeat(3,1fr)}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.equation{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:26px 18px;text-align:center;overflow-x:auto}
+.equation .main{font:400 clamp(20px,2.6vw,29px)/1.3 Fraunces,Georgia,serif;letter-spacing:-.01em;white-space:nowrap}
+.equation .tline{margin-top:16px;font:400 clamp(15px,1.8vw,19px)/1 Fraunces,Georgia,serif;color:var(--muted);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.equation var{font-style:italic;color:var(--accent);font-weight:600}
+.equation .frac{display:inline-flex;flex-direction:column;align-items:center;gap:4px;font-size:.88em}
+.equation .frac span:first-child{border-bottom:1px solid currentColor;padding:0 6px 4px}
+.equation .katex{font-size:1.08em;color:var(--ink)}
+.equation .tline .katex{color:var(--muted);font-size:1.15em}
+.equation .katex .v{color:var(--accent)}
+.equation.tex .tline{display:block;margin-top:18px}
+.scatter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:820px){.equation{padding:22px 8px}.equation.tex .main{font-size:3.9vw}.method{grid-template-columns:minmax(0,1fr)}.table-wrap{overflow-x:auto}.grid{grid-template-columns:minmax(0,1fr)}.scatter-grid{grid-template-columns:1fr}.meta{grid-template-columns:repeat(3,1fr)}}
+.preview{background:radial-gradient(120% 90% at 50% 0%,#3a4a2c,#1b2116 55%,#0b0d0a)}
+.preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.meta{grid-template-columns:repeat(4,1fr)}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.scatter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dot.fable{fill:var(--accent-2)}
+.legend{display:flex;gap:16px;font:11px "JetBrains Mono",monospace;color:var(--muted);margin:0 0 6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:var(--accent)}
+.legend i.fable{background:var(--accent-2)}
+.card.pending{opacity:.72;box-shadow:none;border-style:dashed}
+.card.pending:hover{transform:none}
+.card.pending .preview{display:grid;place-items:center;color:#d8cdb8;font:600 12px "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase}
+.card.pending .preview .pulse{width:10px;height:10px;border-radius:50%;background:var(--accent);margin:0 auto 12px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.card.pending .preview .pulse{animation:none}}
+.btn.disabled{pointer-events:none;opacity:.5}
+.family{font:11px "JetBrains Mono",monospace;color:var(--muted)}
+tr.pending td{color:var(--muted);font-style:italic}
+.callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:12px;padding:16px 20px;color:var(--muted);font-size:14px;margin:0}
+.callout b{color:var(--ink)}
+.method{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+@media (max-width:820px){.grid,.scatter-grid,.method{grid-template-columns:minmax(0,1fr)}.meta{grid-template-columns:repeat(2,1fr)}.table-wrap{overflow-x:auto}th:first-child,td:first-child{display:table-cell}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="brand" href="https://eval-forge.github.io" aria-label="Eval Forge home"><svg class="logo" aria-hidden="true" viewBox="0 0 96 100" fill="none"><defs><linearGradient id="forge-blue" x1="15" y1="12" x2="80" y2="85" gradientUnits="userSpaceOnUse"><stop stop-color="#55c5ff"/><stop offset="1" stop-color="#2e50ed"/></linearGradient></defs><rect x="39" y="24" width="19" height="19" rx="4" fill="#b6eaff"/><rect x="59" y="5" width="12" height="12" rx="3" fill="#2e50ed"/><rect x="70" y="29" width="10" height="10" rx="2.5" fill="#43b7ff"/><rect x="25" y="39" width="11" height="11" rx="2.5" fill="#82d8ff"/><rect x="60" y="44" width="12" height="12" rx="3" fill="#419aff"/><rect x="31" y="17" width="6" height="6" rx="1.7" fill="#b6eaff"/><path d="M9 61h78c-4 8-11 12-21 16-5 2-7 5-7 9 0 3 2 6 7 9H31c5-4 7-7 7-11 0-5-4-8-12-10-7-2-13-6-17-13Z" fill="url(#forge-blue)"/><path d="M9 61h78l-33 8c-7 2-11 6-13 12-2-4-7-6-15-7-7-2-13-6-17-13Z" fill="#d4eeff" opacity=".72"/></svg><b>Eval Forge</b></a>
+  <span class="hide-sm">Three.js relic heist</span>
+  <span class="hide-sm" id="count-bar"></span>
+  <a href="https://eval-forge.github.io" target="_blank" rel="noopener noreferrer">Back to Eval Forge homepage ↗</a>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Eval Forge · Opus vs Fable</div>
+      <h1>The Lost <em>Temple</em></h1>
+      <p class="lede">One brutal prompt, six contestants: Opus 5.5 on medium, high, extra high and max effort, and Fable 5.2 on high and extra high. Each had to build a full first-person relic heist in Three.js with real physics, a moving sun, a torch that runs out, trapped loot and guardians that wake at sunset. Here's what each one shipped, how long it took and what it cost.</p>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section>
+    <h2>The scoreboard so far</h2>
+    <p class="sub">Time is wall-clock from first message to finished pull request. Cost is what the run actually billed. Unit tests are the passing count each entry reported.</p>
+    <div class="method">
+      <div class="eq-card">
+        <p class="callout"><b>Quality scores are not in yet.</b> Score and truthness to prompt get judged once all six entries are done, so nobody gets graded on a curve with two players still on the field. Until then, the hard numbers below are the only ones that count.</p>
+        <dl>
+          <dt>Time</dt><dd>Wall-clock build time, from the prompt landing to the finished pull request.</dd>
+          <dt>Cost</dt><dd>Real spend for the run, in US dollars, from the usage tracker.</dd>
+          <dt>$/hr</dt><dd>Cost divided by time. How hard each model burns money while it works.</dd>
+          <dt>Tests</dt><dd>Passing unit tests the entry shipped, as reported in its own self-review.</dd>
+        </dl>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Model</th><th>Time</th><th>Cost</th><th>$/hr</th><th>Tests</th><th>PR</th></tr></thead>
+          <tbody id="rank-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The entries</h2>
+    <p class="sub">Click a preview to boot the live game right in the card, or open it full screen. Every texture, mesh and sound is generated in code.</p>
+    <div class="controls" role="group" aria-label="Sort entries">
+      <button class="chip" data-sort="cost" aria-pressed="true">Cheapest first</button>
+      <button class="chip" data-sort="time" aria-pressed="false">Fastest first</button>
+      <button class="chip" data-sort="tests" aria-pressed="false">Most tests</button>
+      <button class="chip" data-sort="name" aria-pressed="false">Model name</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <h2>What the extra effort bought</h2>
+    <p class="sub">One dot per finished entry. Hover a dot for its exact values.</p>
+    <div class="legend"><span><i></i>Opus 5.5</span><span><i class="fable"></i>Fable 5.2</span></div>
+    <div class="scatter-grid">
+      <figure class="chart"><figcaption>Time against cost</figcaption><svg id="plot-time" viewBox="0 0 360 260" role="img" aria-label="Scatter of build time in minutes against cost in dollars"></svg></figure>
+      <figure class="chart"><figcaption>Unit tests against cost</figcaption><svg id="plot-tests" viewBox="0 0 360 260" role="img" aria-label="Scatter of passing unit tests against cost in dollars"></svg></figure>
+    </div>
+  </section>
+
+  <section>
+    <details class="prompt">
+      <summary>Read the full prompt</summary>
+<pre>The Lost Temple: a complete, playable 3D first-person relic-heist game that runs in the browser.
+
+Premise
+You're a treasure hunter who reaches an ancient ruined temple at dawn. Work your way from the sunlit jungle through roofless ruins and down into pitch-black dungeons, grabbing as much valuable loot as you can. Then escape through the great temple door before darkness falls. At sunset, the temple's guardians wake up and hunt you. Greed against the clock is the whole game.
+
+Constraints
+- Web app in TypeScript or JavaScript, using Three.js for rendering and a real physics engine (Rapier or cannon-es). No full game engines such as Unity, Godot or PlayCanvas.
+- Runs from `npm install &amp;&amp; npm run dev`. Include a README with run steps and controls.
+- Every asset is generated in code: procedural geometry, canvas or shader textures, and WebAudio sound. No external models, images or audio.
+- At least 60 FPS on a mid-range laptop with shadows on.
+
+01 Scene progression
+The run is a chain of at least 7 distinct scenes, streamed in and out with seamless transitions and no loading screens in the middle of a run. They're grouped into 3 zones.
+
+Zone A: Outside (full sunlight)
+- Jungle approach: dense vegetation, a river crossing, and the first collapsing rope bridge over a gorge.
+- Temple courtyard: overgrown plazas, toppled pillars, a sundial puzzle that uses the real sun position, and the great door. The door is your entrance and your only exit.
+- Outer cliffs: an optional scene with ledges, vine climbing, wind, and high-value relics out in the open.
+
+Zone B: Roofless ruins (partly open to the sky)
+- Broken halls: the roof has caved in, so shafts of sunlight move across the floor through the day. Some paths are only safe while they're sunlit.
+- Collapsed sanctum: half the ceiling is gone and the rest is unstable. Noise brings debris down. The main idol sits here under a beam of light.
+
+Zone C: Fully dungeoned (no sky at all)
+- Lower catacombs: crumbling floors, dart corridors, and a flooded chamber.
+- Deep vault: the richest and heaviest loot, the longest way back out, and the guardians' lair next door.
+
+Progression rules
+- Each zone is more dangerous and holds more valuable loot than the one before.
+- Deeper scenes unlock through puzzles, keys or relics found earlier (for example, a sun-disc from the courtyard opens the catacomb seal).
+- Shortcuts open once you've used them, like a kicked-down wall or a lowered drawbridge. The escape route should be its own design, not just the way in played backwards.
+
+02 Physics
+- Rope and plank bridges are built from jointed rigid bodies. Planks crack and drop out from under you after a short delay, so you can't stop on them.
+- Crumbling floors, rolling-boulder traps, pressure plates, swinging blades, dart traps, and pushable stone blocks for puzzles.
+- Loot has real weight. Carrying more slows you down and drains stamina faster.
+
+03 Sun, time and lighting
+- A real sun moves across the sky in a compressed 12 to 15 minute day, casting shadows.
+- Sunlight only reaches Zones A and B, through openings, cracks and the missing roof, so the sun's angle changes which areas are lit.
+- Color grading shifts from dawn to noon to a red-orange sunset to night.
+
+04 Ticking clock
+- An always-visible countdown to darkness, drawn as a stone sundial on the HUD. It ticks audibly, and the ticking speeds up and gets louder in the last 2 minutes.
+- At 60 seconds left, the screen edges pulse, the music shifts, and the temple rumbles.
+- At zero, darkness falls, the guardians wake, and the great door begins closing, leaving a short final window to escape.
+- In Zone C you can't see the sky, so the sundial on the HUD and the sounds are your only sense of time.
+
+05 Torch: the only light underground
+- Fully dungeoned scenes have zero ambient light: no glowing decorations, no fill light, no skybox bleed. Outside your torch radius it's true black.
+- The torch is a dynamic point light with flicker and real shadows.
+- Fuel: the torch burns fuel, its radius shrinks as fuel runs low, and water, wind gusts or a fall can blow it out. Relighting takes a short, vulnerable animation.
+- Spare light: you can find limited fuel and spare torches. You can also place torches in wall sconces to light your way back out.
+- Guardians: they're drawn to torchlight, so light keeps you alive and also gives you away.
+
+06 Relics and economy
+- At least 15 relic types (idols, masks, gem-studded urns, scrolls and so on) with different values, weights and rarities, each worth more the deeper you find it.
+- Some relics are trapped: lifting one off its pedestal triggers a trap unless you swap in an object of equal weight.
+- Show a running loot value on the HUD. Only loot carried out the door counts.
+
+07 Guardians at sunset
+- At least 3 guardian types, each with different movement and senses (for example a slow stone sentinel, a fast crawler that hunts by sound, and a shadow that avoids light).
+- They spawn deepest first and sweep outward toward the door.
+- They chase you with real navmesh pathfinding, not straight-line homing.
+- Getting caught means you lose the run and everything you were carrying.
+
+08 Player
+- Pointer-lock first-person controls: run, jump, crouch, climb vines and ledges, and stamina.
+- Grab, carry, drop and throw objects.
+
+09 Meta progression and UI
+- A results screen showing haul value, time and relics found.
+- A persistent high-score table, plus a shop that sells gear upgrades between runs (better torch, more fuel, rope, a bigger satchel). Save with localStorage.
+- Main menu, pause menu, settings (FOV, sensitivity, volume, graphics quality), a HUD (sundial clock, stamina, weight, torch fuel, loot value), and a debug overlay (FPS, physics body count, current scene).
+
+10 Audio
+All procedural: jungle ambience by day, deep rumbles at dusk, the clock ticking, creaking and snapping wood, stone grinding, the torch crackling, guardian calls, and a heartbeat when guardians are near.
+
+Stretch goals
+A hand-drawn map that fills in as you explore, a collapse sequence triggered by taking the main idol, a ghost replay of your best run, and gamepad support.
+
+Process
+- Before writing any code, write two files:
+  - DESIGN.md: the core loop, the scene graph with its unlock dependencies, a relic table, and loot value by zone.
+  - ARCHITECTURE.md: how the code is structured.
+- Write unit tests for the loot economy, trap triggers, countdown thresholds, the torch fuel and radius curve, scene unlock logic, and the guardian state machines.
+- Finish with an honest SELF_REVIEW.md. Mark every requirement as done, partial or missing, list known bugs and FPS per zone, and confirm that Zone C has zero ambient light. Anything claimed but broken is scored harder than anything admitted as missing.
+
+Work autonomously until a full run is playable and fun, from arriving at dawn to escaping or dying at dark. Don't stop at a prototype.</pre>
+    </details>
+  </section>
+
+  <footer>
+    <span>Eval Forge · Opus vs Fable in Three.js</span>
+    <span><a href="https://github.com/eval-forge/opus-v-fable" target="_blank" rel="noopener noreferrer">Source on GitHub</a> · <a href="https://eval-forge.github.io" target="_blank" rel="noopener noreferrer">eval-forge.github.io</a></span>
+  </footer>
+</div>
+
+<button class="theme" id="theme" aria-label="Toggle color theme">◐</button>
+
+<script>
+// mins = wall-clock build time, cost = billed USD from the usage tracker, tests = passing unit tests.
+// Entries with done:false are still building and show as pending.
+const ENTRIES = [
+  {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7},
+  {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8},
+  {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9},
+  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:false},
+  {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10},
+  {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:false},
+];
+const EFFORT_ORDER = {medium:0, high:1, xhigh:2, max:3};
+const EFFORT_LABEL = {medium:"medium", high:"high", xhigh:"extra high", max:"max"};
+const DONE = ENTRIES.filter(e => e.done);
+DONE.forEach(e => e.rate = e.cost / (e.mins / 60));
+
+const SRC = "https://github.com/eval-forge/opus-v-fable/tree/main/";
+const PRS = "https://github.com/eval-forge/eval-forge.github.io/pull/";
+const fmt = m => m >= 60 ? `${Math.floor(m/60)}h ${String(m%60).padStart(2,"0")}m` : `${m}m`;
+const usd = n => `$${n.toFixed(2)}`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const name = e => `${e.model} ${EFFORT_LABEL[e.effort]}`;
+const isFable = e => e.model.startsWith("Fable");
+
+const byCost = [...DONE].sort((a,b) => a.cost - b.cost);
+const byTime = [...DONE].sort((a,b) => a.mins - b.mins);
+const cheapest = byCost[0], priciest = byCost.at(-1), fastest = byTime[0];
+const spent = DONE.reduce((s,e) => s + e.cost, 0);
+const MAX_COST = priciest.cost;
+
+document.getElementById("count-bar").textContent = `${DONE.length} of ${ENTRIES.length} finished`;
+document.getElementById("stats").innerHTML = [
+  ["Finished", `${DONE.length} of ${ENTRIES.length}`, `${ENTRIES.length - DONE.length} still building`],
+  ["Spent so far", usd(spent), `across ${DONE.length} finished runs`],
+  ["Fastest", fmt(fastest.mins), `${esc(name(fastest))}, slowest was ${fmt(byTime.at(-1).mins)}`],
+  ["Cheapest", usd(cheapest.cost), `${esc(name(cheapest))}, priciest was ${usd(priciest.cost)}`],
+].map(([k,v,s]) => `<div class="stat"><small>${k}</small><strong>${v}</strong><span>${s}</span></div>`).join("");
+
+const tableOrder = [...byCost, ...ENTRIES.filter(e => !e.done)];
+document.getElementById("rank-body").innerHTML = tableOrder.map((e,i) => e.done ? `
+  <tr class="${e === cheapest ? "top" : ""}">
+    <td>${i + 1}</td>
+    <td>${esc(name(e))}</td>
+    <td class="num">${fmt(e.mins)}</td>
+    <td class="score">${usd(e.cost)}</td>
+    <td class="num">${usd(e.rate)}</td>
+    <td class="num">${e.tests}</td>
+    <td class="num"><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></td>
+  </tr>` : `
+  <tr class="pending">
+    <td>…</td><td>${esc(name(e))}</td><td colspan="5">still building</td>
+  </tr>`).join("");
+
+function card(e){
+  if (!e.done) return `
+    <article class="card pending">
+      <div class="preview"><div><div class="pulse"></div>Still building</div></div>
+      <div class="body">
+        <div class="model"><h3>${esc(e.model)}</h3><span class="effort">${esc(EFFORT_LABEL[e.effort])}</span></div>
+        <p class="scene-title">Still grinding away. Results land here when it finishes.</p>
+        <dl class="meta">
+          <div><dt>Time</dt><dd>…</dd></div>
+          <div><dt>Cost</dt><dd>…</dd></div>
+          <div><dt>Tests</dt><dd>…</dd></div>
+          <div><dt>PR</dt><dd>…</dd></div>
+        </dl>
+        <div class="timebar"><i style="width:0"></i></div>
+        <div class="links"><span class="btn primary disabled">Open game ↗</span><span class="btn disabled">View source</span></div>
+      </div>
+    </article>`;
+  return `
+    <article class="card${e === cheapest ? " top" : ""}">
+      <div class="preview" data-file="${e.dir}/">
+        <span class="rank">${isFable(e) ? "Fable" : "Opus"} · ${esc(EFFORT_LABEL[e.effort])}</span>
+        <span class="score-badge">${usd(e.cost)}</span>
+        <img src="previews/${e.dir}.jpg" alt="Main menu of the ${esc(name(e))} entry" loading="lazy">
+        <button type="button" aria-label="Load live game for ${esc(name(e))}"><span>Load live game</span></button>
+      </div>
+      <div class="body">
+        <div class="model"><h3>${esc(e.model)}</h3><span class="effort">${esc(EFFORT_LABEL[e.effort])}</span></div>
+        <dl class="meta">
+          <div><dt>Time</dt><dd>${fmt(e.mins)}</dd></div>
+          <div><dt>Cost</dt><dd>${usd(e.cost)}</dd></div>
+          <div><dt>Tests</dt><dd>${e.tests}</dd></div>
+          <div><dt>PR</dt><dd><a href="${PRS}${e.pr}" target="_blank" rel="noopener noreferrer">#${e.pr}</a></dd></div>
+        </dl>
+        <div class="timebar" title="${usd(e.cost)} of ${usd(MAX_COST)}, the priciest finished run"><i style="width:${(e.cost / MAX_COST * 100).toFixed(1)}%"></i></div>
+        <div class="links">
+          <a class="btn primary" href="${e.dir}/" target="_blank" rel="noopener">Open game ↗</a>
+          <a class="btn" href="${SRC}${e.dir}/source" target="_blank" rel="noopener noreferrer">View source</a>
+        </div>
+      </div>
+    </article>`;
+}
+const renderGrid = list => document.getElementById("grid").innerHTML = list.map(card).join("");
+
+document.getElementById("grid").addEventListener("click", ev => {
+  const btn = ev.target.closest(".preview button");
+  if (!btn) return;
+  const box = btn.parentElement;
+  const frame = document.createElement("iframe");
+  frame.src = box.dataset.file;
+  frame.title = "Live game";
+  frame.allow = "fullscreen; pointer-lock; autoplay";
+  box.querySelectorAll("img,button").forEach(n => n.remove());
+  box.appendChild(frame);
+});
+
+const pendingLast = f => (a,b) => (b.done - a.done) || (a.done ? f(a,b) : 0);
+const SORTS = {
+  cost:  pendingLast((a,b) => a.cost - b.cost),
+  time:  pendingLast((a,b) => a.mins - b.mins),
+  tests: pendingLast((a,b) => b.tests - a.tests),
+  name:  (a,b) => a.model.localeCompare(b.model) || EFFORT_ORDER[a.effort] - EFFORT_ORDER[b.effort],
+};
+document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click", () => {
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === chip));
+  renderGrid([...ENTRIES].sort(SORTS[chip.dataset.sort]));
+}));
+renderGrid([...ENTRIES].sort(SORTS.cost));
+
+// Scatter plots: one dot per finished entry, cost on y.
+const Y_MIN = 0, Y_MAX = 60, Y_STEP = 10;
+const PLOTS = [
+  {id:"plot-time",  min:0, max:150, step:30, val:e => e.mins,  fmt:v => `${v}m`, label:"Build time (min)"},
+  {id:"plot-tests", min:0, max:160, step:40, val:e => e.tests, fmt:v => v,      label:"Passing unit tests"},
+];
+PLOTS.forEach(cfg => {
+  const W = 360, H = 260, m = {l:40, r:14, t:12, b:40};
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const sx = v => m.l + (v - cfg.min) / (cfg.max - cfg.min) * pw;
+  const sy = v => m.t + (1 - (v - Y_MIN) / (Y_MAX - Y_MIN)) * ph;
+  let g = "";
+  for (let v = Y_MIN; v <= Y_MAX; v += Y_STEP) {
+    g += `<line class="gridline" x1="${m.l}" x2="${W - m.r}" y1="${sy(v)}" y2="${sy(v)}"/>`;
+    g += `<text class="tick" x="${m.l - 6}" y="${sy(v) + 3}" text-anchor="end">$${v}</text>`;
+  }
+  for (let v = cfg.min; v <= cfg.max; v += cfg.step) {
+    g += `<text class="tick" x="${sx(v)}" y="${H - m.b + 14}" text-anchor="middle">${cfg.fmt(v)}</text>`;
+  }
+  g += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}"/>`;
+  g += `<text class="axis-title" x="${m.l + pw / 2}" y="${H - 6}" text-anchor="middle">${cfg.label}</text>`;
+  g += `<text class="axis-title" transform="translate(12 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">Cost (USD)</text>`;
+  const placed = [];
+  const LABEL_H = 11, CHAR_W = 6.2;
+  const bad = b => b.x < m.l || b.x + b.w > W - 2 || b.y < 0 || placed.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y);
+  DONE.forEach(e => {
+    const x = sx(cfg.val(e)), y = sy(e.cost);
+    const text = `${isFable(e) ? "F" : "O"} ${EFFORT_LABEL[e.effort]}`, w = text.length * CHAR_W;
+    const options = [
+      {anchor:"start",  tx: x + 7, ty: y + 3, box: {x: x + 7, y: y - LABEL_H / 2 + 1}},
+      {anchor:"end",    tx: x - 7, ty: y + 3, box: {x: x - 7 - w, y: y - LABEL_H / 2 + 1}},
+      {anchor:"middle", tx: x,     ty: y - 8, box: {x: x - w / 2, y: y - 8 - LABEL_H + 2}},
+      {anchor:"middle", tx: x,     ty: y + 16, box: {x: x - w / 2, y: y + 6}},
+    ];
+    const pick = options.find(o => !bad({...o.box, w, h: LABEL_H})) || options[0];
+    placed.push({...pick.box, w, h: LABEL_H});
+    g += `<g><circle class="dot${isFable(e) ? " fable" : ""}" cx="${x}" cy="${y}" r="4.5"><title>${esc(name(e))}: ${cfg.label.toLowerCase()} ${cfg.fmt(cfg.val(e))}, cost ${usd(e.cost)}</title></circle>` +
+         `<text class="dot-label" x="${pick.tx}" y="${pick.ty}" text-anchor="${pick.anchor}">${esc(text)}</text></g>`;
+  });
+  document.getElementById(cfg.id).innerHTML = g;
+});
+
+const root = document.documentElement;
+try { const t = localStorage.getItem("theme"); if (t) root.dataset.theme = t; } catch (e) {}
+document.getElementById("theme").addEventListener("click", () => {
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>
