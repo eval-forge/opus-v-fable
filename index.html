@@ -213,7 +213,7 @@ tr.pending td{color:var(--muted);font-style:italic}
           <dt>S</dt><dd>Quality, 0 to 100: does it run, how much of the game actually works when driven, how good it looks and how deep the systems go.</dd>
           <dt>P</dt><dd>Prompt fidelity, 0 to 1: share of the prompt's requirements met, checked against the running build. A claim in SELF_REVIEW.md that the judge caught being false costs double.</dd>
           <dt>Time</dt><dd>Wall-clock build time, from the prompt landing to the finished pull request.</dd>
-          <dt>Cost</dt><dd>Real spend for the run, in US dollars, from the usage tracker. A ~ marks the run's own estimate until the tracker number lands.</dd>
+          <dt>Cost</dt><dd>Real spend for the run, in US dollars, from the usage tracker.</dd>
           <dt>$/hr</dt><dd>Cost divided by time. How hard each model burns money while it works.</dd>
           <dt>Tests</dt><dd>Passing unit tests the entry shipped, as reported in its own self-review.</dd>
         </dl>
@@ -385,7 +385,7 @@ const ENTRIES = [
   {model:"Opus 5.5",  effort:"medium", dir:"opus-5.5-medium", done:true,  mins:66,  cost:18.76, tests:51,  pr:7,  score:64.2},
   {model:"Opus 5.5",  effort:"high",   dir:"opus-5.5-high",   done:true,  mins:82,  cost:21.30, tests:52,  pr:8,  score:67.7},
   {model:"Opus 5.5",  effort:"xhigh",  dir:"opus-5.5-xhigh",  done:true,  mins:126, cost:38.80, tests:82,  pr:9,  score:84.0},
-  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:89.9, est:true},
+  {model:"Opus 5.5",  effort:"max",    dir:"opus-5.5-max",    done:true,  mins:319, cost:87.10, tests:109, pr:14, score:89.9},
   {model:"Fable 5.2", effort:"high",   dir:"fable-5.2-high",  done:true,  mins:141, cost:55.52, tests:150, pr:10, score:73.3},
   {model:"Fable 5.2", effort:"xhigh",  dir:"fable-5.2-xhigh", done:true,  mins:300, cost:110.71, tests:226, pr:12, score:86.8},
 ];
